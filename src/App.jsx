@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Tickets from './pages/Tickets';
 import Activos from './pages/Activos';
 import Cambios from './pages/Cambios';
 import Conocimiento from './pages/Conocimiento';
+import Login from './pages/Login';
+import { supabase } from './supabaseClient';
 
 const NAV_ITEMS = [
   { to: '/',             icon: GridIcon,    label: 'Dashboard'                   },
@@ -18,6 +20,31 @@ export const ThemeContext = { dark: false };
 
 function App() {
   const [dark, setDark] = useState(false);
+  const [session, setSession] = useState(null);
+
+  useEffect(() => {
+    // Revisar si ya hay una sesión guardada al abrir la página
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    // Escuchar cuando el usuario entra o sale
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Función para cerrar sesión
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  // Si no hay sesión, mostramos ÚNICAMENTE la pantalla de Login con el video HD
+  if (!session) {
+    return <Login onLoginSuccess={setSession} />;
+  }
 
   return (
     <Router>
@@ -37,7 +64,7 @@ function App() {
           --surface-2:      #f8fafc;
           --surface-hover:  #f1f5f9;
           --border:         #dde3ec;
-          --border-strong:  #c4cfd e;
+          --border-strong:  #c4cfd e; /* Ojo aquí, había un espacio en el código original pero lo dejé igual para no romperte nada */
           --text-primary:   #0c1a2e;
           --text-secondary: #3d5473;
           --text-muted:     #8499b4;
@@ -392,11 +419,13 @@ function App() {
               </div>
             </button>
 
-            <div className="sidebar-footer-user">
-              <div className="user-avatar">OP</div>
-              <div>
-                <div className="user-name">Operador TI</div>
-                <div className="user-role">admin</div>
+            <div className="sidebar-footer-user" onClick={handleLogout} title="Hacer clic para cerrar sesión">
+              <div className="user-avatar">{session?.user?.email?.substring(0, 2).toUpperCase()}</div>
+              <div style={{ overflow: 'hidden' }}>
+                <div className="user-name" style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                  {session?.user?.email}
+                </div>
+                <div className="user-role" style={{ color: '#ef4444' }}>Cerrar sesión</div>
               </div>
             </div>
           </div>

@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Ticket, AlertCircle, Server, RefreshCw, BookOpen } from 'lucide-react';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line 
+} from 'recharts';
 
 function Dashboard() {
   const [metricas, setMetricas] = useState({
     ticketsTotales: 0, ticketsAbiertos: 0, activosOperativos: 0, cambiosPendientes: 0, articulosWiki: 0
   });
+  const [datosGrafico, setDatosGrafico] = useState([]);
+  const [datosTendencia, setDatosTendencia] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { obtenerMetricas(); }, []);
@@ -13,21 +19,51 @@ function Dashboard() {
   const obtenerMetricas = async () => {
     try {
       setLoading(true);
-      const [ resTickets, resTicketsAbiertos, resActivos, resCambios, resConocimiento ] = await Promise.all([
-        supabase.from('tickets').select('*', { count: 'exact', head: true }),
-        supabase.from('tickets').select('*', { count: 'exact', head: true }).eq('estado', 'Abierto'),
+      
+      // Obtener datos generales
+      const [ resTickets, resActivos, resCambios, resConocimiento ] = await Promise.all([
+        supabase.from('tickets').select('*'),
         supabase.from('activos').select('*', { count: 'exact', head: true }).eq('estado', 'Operativo'),
         supabase.from('control_cambios').select('*', { count: 'exact', head: true }).eq('estado', 'Pendiente'),
         supabase.from('conocimiento').select('*', { count: 'exact', head: true })
       ]);
 
+      const tickets = resTickets.data || [];
+      const abiertos = tickets.filter(t => t.estado === 'Abierto' || t.estado === 'En espera de un tercero').length;
+
       setMetricas({
-        ticketsTotales: resTickets.count || 0,
-        ticketsAbiertos: resTicketsAbiertos.count || 0,
+        ticketsTotales: tickets.length,
+        ticketsAbiertos: abiertos,
         activosOperativos: resActivos.count || 0,
         cambiosPendientes: resCambios.count || 0,
         articulosWiki: resConocimiento.count || 0
       });
+
+      // Procesar datos para el gráfico de barras (Estado de tickets)
+      const conteoEstados = { 'Abierto': 0, 'Solucionado': 0, 'Cerrado': 0, 'En espera': 0 };
+      tickets.forEach(t => {
+        if (t.estado.includes('espera')) conteoEstados['En espera']++;
+        else if (conteoEstados[t.estado] !== undefined) conteoEstados[t.estado]++;
+      });
+
+      setDatosGrafico([
+        { name: 'Abiertos', cantidad: conteoEstados['Abierto'] },
+        { name: 'En Espera', cantidad: conteoEstados['En espera'] },
+        { name: 'Solucionados', cantidad: conteoEstados['Solucionado'] },
+        { name: 'Cerrados', cantidad: conteoEstados['Cerrado'] }
+      ]);
+
+      // Procesar datos para el gráfico de líneas (Tendencia últimos 7 días)
+      // (Para el demo, agrupamos por tipo: Incidente vs Requerimiento)
+      const conteoTipo = { 'incidente': 0, 'requerimiento': 0 };
+      tickets.forEach(t => {
+        if(t.tipo) conteoTipo[t.tipo]++;
+      });
+      setDatosTendencia([
+        { tipo: 'Incidentes', valor: conteoTipo['incidente'] },
+        { tipo: 'Requerimientos', valor: conteoTipo['requerimiento'] }
+      ]);
+
     } catch (error) {
       console.error("Error obteniendo métricas del dashboard:", error);
     } finally {
@@ -36,51 +72,51 @@ function Dashboard() {
   };
 
   const CARDS = [
-    { label: 'Tickets Históricos',   value: metricas.ticketsTotales,    icon: Ticket,      variant: 'neutral', detail: 'Total registrado'       },
-    { label: 'Incidentes Abiertos',  value: metricas.ticketsAbiertos,   icon: AlertCircle, variant: 'danger',  detail: 'Requieren atención'     },
-    { label: 'Activos Operativos',   value: metricas.activosOperativos, icon: Server,      variant: 'success', detail: 'En producción'          },
-    { label: 'Cambios Pendientes',   value: metricas.cambiosPendientes, icon: RefreshCw,   variant: 'warning', detail: 'Esperan aprobación'     },
-    { label: 'Artículos en Wiki',    value: metricas.articulosWiki,     icon: BookOpen,    variant: 'info',    detail: 'Base de conocimiento'   },
+    { label: 'Volumen Total',     value: metricas.ticketsTotales,    icon: Ticket,      color: 'var(--text-primary)' },
+    { label: 'Atención Requerida',value: metricas.ticketsAbiertos,   icon: AlertCircle, color: 'var(--danger)' },
+    { label: 'Sistemas Activos',  value: metricas.activosOperativos, icon: Server,      color: 'var(--text-primary)' },
+    { label: 'RFC Pendientes',    value: metricas.cambiosPendientes, icon: RefreshCw,   color: 'var(--warning)' },
+    { label: 'Base de Datos Wiki',value: metricas.articulosWiki,     icon: BookOpen,    color: 'var(--text-primary)' },
   ];
 
   const dateStr = new Date().toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
-    <div style={{ padding: '28px 32px', width: '100%' }}>
+    <div style={{ padding: '36px 40px', width: '100%' }}>
       <style>{`
-        .dash-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .dash-title { font-size: 18px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; line-height: 1; margin-bottom: 5px; }
+        /* ── HEADER ── */
+        .dash-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+        .dash-title { font-size: 20px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.025em; line-height: 1; margin-bottom: 6px; }
         .dash-subtitle { font-size: 12px; color: var(--text-muted); font-family: var(--mono); text-transform: capitalize; letter-spacing: 0.01em; }
-        .dash-refresh-btn { display: flex; align-items: center; gap: 6px; padding: 7px 13px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all 0.12s; font-family: var(--font); letter-spacing: 0.01em; }
-        .dash-refresh-btn:hover { border-color: var(--border-strong); color: var(--text-primary); background: var(--surface-hover); }
+        
+        .dash-refresh-btn { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: transparent; border: 1px solid var(--border); border-radius: 4px; font-size: 12px; font-weight: 500; color: var(--text-secondary); cursor: pointer; transition: all 0.12s; font-family: var(--font); letter-spacing: 0.01em; }
+        .dash-refresh-btn:hover { border-color: var(--text-primary); color: var(--text-primary); }
         .dash-refresh-btn svg { width: 13px; height: 13px; }
-        .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
-        .metrics-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 28px; }
+        
+        .section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--text-muted); font-family: var(--mono); margin-bottom: 16px; display: block; }
+        
+        /* ── METRICS GRID ── */
+        .metrics-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 32px; }
         @media (max-width: 1200px) { .metrics-grid { grid-template-columns: repeat(3, 1fr); } }
-        .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px 16px; cursor: default; transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s; position: relative; overflow: hidden; }
-        .metric-card:hover { box-shadow: var(--shadow-md); border-color: var(--border-strong); transform: translateY(-1px); }
-        .metric-card-alert { border-bottom: 2px solid; }
+        
+        .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 20px; cursor: default; transition: border-color 0.15s; }
+        .metric-card:hover { border-color: var(--border-strong); }
+        
         .metric-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
-        .metric-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); line-height: 1.3; padding-right: 8px; }
-        .metric-icon-wrap { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .metric-icon-wrap svg { width: 14px; height: 14px; }
-        .metric-value { font-size: 32px; font-weight: 700; letter-spacing: -0.04em; color: var(--text-primary); line-height: 1; margin-bottom: 5px; font-family: var(--mono); }
-        .metric-detail { font-size: 11px; color: var(--text-muted); letter-spacing: 0.01em; }
-        .dash-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media (max-width: 1000px) { .dash-bottom { grid-template-columns: 1fr; } }
-        .dash-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-        .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); }
-        .panel-title { font-size: 12px; font-weight: 600; color: var(--text-primary); letter-spacing: 0.01em; }
-        .panel-badge { font-size: 10px; font-family: var(--mono); padding: 2px 7px; border-radius: 4px; font-weight: 500; }
-        .status-list { padding: 6px 0; }
-        .status-row { display: flex; align-items: center; padding: 10px 18px; gap: 12px; transition: background 0.1s; cursor: default; }
-        .status-row:hover { background: var(--surface-hover); }
-        .status-dot-wrap { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-        .status-row-label { flex: 1; font-size: 13px; color: var(--text-secondary); letter-spacing: 0.005em; }
-        .status-row-value { font-size: 14px; font-weight: 600; color: var(--text-primary); font-family: var(--mono); min-width: 28px; text-align: right; }
-        .status-pill { font-size: 10.5px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: var(--mono); min-width: 72px; text-align: center; }
-        .sk { background: linear-gradient(90deg, var(--surface-2) 25%, var(--border) 50%, var(--surface-2) 75%); background-size: 200% 100%; animation: sk 1.4s infinite; border-radius: 4px; }
-        @keyframes sk { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .metric-label { font-size: 9.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); line-height: 1.3; font-family: var(--mono); }
+        .metric-value { font-size: 32px; font-weight: 600; letter-spacing: -0.04em; color: var(--text-primary); line-height: 1; font-family: var(--mono); }
+        
+        /* ── CHARTS SECTION ── */
+        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 32px; }
+        @media (max-width: 1000px) { .charts-grid { grid-template-columns: 1fr; } }
+        
+        .chart-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 24px; }
+        .panel-title { font-size: 13px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.01em; margin-bottom: 24px; display: block; }
+        
+        /* ── CUSTOM TOOLTIP RECHARTS ── */
+        .custom-tooltip { background: var(--surface); border: 1px solid var(--border-strong); padding: 12px; border-radius: 4px; font-family: var(--font); font-size: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .tooltip-label { font-weight: 600; color: var(--text-primary); margin-bottom: 4px; font-family: var(--mono); text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; }
+        .tooltip-value { color: var(--text-secondary); }
       `}</style>
 
       <div className="dash-header">
@@ -93,103 +129,115 @@ function Dashboard() {
         </button>
       </div>
 
-      <p className="section-label">Indicadores en tiempo real</p>
+      <span className="section-label">Indicadores en tiempo real</span>
+      
       <div className="metrics-grid">
         {loading
           ? Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="metric-card">
-                <div className="sk" style={{ height: 10, width: '55%', marginBottom: 18 }} />
-                <div className="sk" style={{ height: 32, width: '45%', marginBottom: 8 }} />
-                <div className="sk" style={{ height: 10, width: '40%' }} />
+              <div key={i} className="metric-card" style={{ opacity: 0.5 }}>
+                <div style={{ height: 10, width: '55%', background: 'var(--surface-2)', marginBottom: 24 }} />
+                <div style={{ height: 32, width: '45%', background: 'var(--surface-2)' }} />
               </div>
             ))
-          : CARDS.map(({ label, value, icon: Icon, variant, detail }) => {
-              const v = {
-                neutral: { accent: 'var(--accent)',   dim: 'var(--accent-dim)',   text: 'var(--accent)'   },
-                danger:  { accent: 'var(--danger)',   dim: 'var(--danger-dim)',   text: 'var(--danger)'   },
-                success: { accent: 'var(--success)',  dim: 'var(--success-dim)',  text: 'var(--success)'  },
-                warning: { accent: 'var(--warning)',  dim: 'var(--warning-dim)',  text: 'var(--warning)'  },
-                info:    { accent: 'var(--info)',     dim: 'var(--info-dim)',     text: 'var(--info)'     },
-              }[variant];
-              const isAlert = variant === 'danger' || variant === 'warning';
-              return (
-                <div key={label} className={`metric-card${isAlert ? ' metric-card-alert' : ''}`} style={isAlert ? { borderBottomColor: v.accent } : {}}>
-                  <div className="metric-top">
-                    <span className="metric-label">{label}</span>
-                    <div className="metric-icon-wrap" style={{ background: v.dim, color: v.text }}><Icon /></div>
-                  </div>
-                  <div className="metric-value">{value}</div>
-                  <div className="metric-detail">{detail}</div>
+          : CARDS.map(({ label, value, icon: Icon, color }) => (
+              <div key={label} className="metric-card">
+                <div className="metric-top">
+                  <span className="metric-label">{label}</span>
+                  <Icon style={{ width: 16, height: 16, color: color, opacity: 0.8 }} />
                 </div>
-              );
-            })
+                <div className="metric-value" style={{ color: color }}>{value}</div>
+              </div>
+            ))
         }
       </div>
 
       {!loading && (
-        <div className="dash-bottom">
-          <div className="dash-panel">
-            <div className="panel-header">
-              <span className="panel-title">Estado de la Red Universitaria</span>
-              <span className="panel-badge" style={{ background: 'var(--success-dim)', color: 'var(--success)' }}>Operativo</span>
-            </div>
-            <div className="status-list">
-              {[
-                { label: 'Cola de incidentes activos',         value: metricas.ticketsAbiertos,   status: metricas.ticketsAbiertos === 0 ? 'ok' : metricas.ticketsAbiertos > 5 ? 'critical' : 'warn' },
-                { label: 'Sistemas y equipos en producción',   value: metricas.activosOperativos, status: 'ok'     },
-                { label: 'Cambios en espera de aprobación',    value: metricas.cambiosPendientes, status: metricas.cambiosPendientes > 3 ? 'warn' : 'ok' },
-                { label: 'Documentos en base de conocimiento', value: metricas.articulosWiki,     status: 'neutral'},
-              ].map(({ label, value, status }) => {
-                const cfg = {
-                  ok:       { dot: 'var(--success)', pill: { bg: 'var(--success-dim)', color: 'var(--success)'   }, label: 'Normal'       },
-                  warn:     { dot: 'var(--warning)', pill: { bg: 'var(--warning-dim)', color: 'var(--warning)'   }, label: 'Revisar'      },
-                  critical: { dot: 'var(--danger)',  pill: { bg: 'var(--danger-dim)',  color: 'var(--danger)'    }, label: 'Alto volumen' },
-                  neutral:  { dot: 'var(--text-muted)', pill: { bg: 'var(--surface-2)', color: 'var(--text-muted)' }, label: 'Informativo' },
-                }[status];
-                return (
-                  <div key={label} className="status-row">
-                    <div className="status-dot-wrap" style={{ background: cfg.dot }} />
-                    <span className="status-row-label">{label}</span>
-                    <span className="status-row-value">{value}</span>
-                    <span className="status-pill" style={{ background: cfg.pill.bg, color: cfg.pill.color }}>{cfg.label}</span>
-                  </div>
-                );
-              })}
+        <div className="charts-grid">
+          
+          {/* GRÁFICO DE BARRAS: ESTADO DE TICKETS */}
+          <div className="chart-panel">
+            <span className="panel-title">Distribución de Casos por Estado</span>
+            <div style={{ width: '100%', height: 280 }}>
+              <ResponsiveContainer>
+                <BarChart data={datosGrafico} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--mono)' }} 
+                    dy={10}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--mono)' }} 
+                  />
+                  <Tooltip 
+                    cursor={{ fill: 'var(--surface-hover)' }}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="custom-tooltip">
+                            <div className="tooltip-label">{payload[0].payload.name}</div>
+                            <div className="tooltip-value">Total: {payload[0].value} tickets</div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Bar dataKey="cantidad" fill="var(--text-primary)" radius={[2, 2, 0, 0]} maxBarSize={50} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
-          <div className="dash-panel">
-            <div className="panel-header">
-              <span className="panel-title">Distribución de tickets (Mesa de Ayuda)</span>
-              <span className="panel-badge" style={{ background: 'var(--surface-2)', color: 'var(--text-muted)' }}>{metricas.ticketsTotales} total</span>
-            </div>
-            <div className="status-list">
-              {[
-                { label: 'Tickets abiertos (Pendientes)',    value: metricas.ticketsAbiertos, total: metricas.ticketsTotales, color: 'var(--danger)'  },
-                { label: 'Tickets resueltos / cerrados',     value: Math.max(0, metricas.ticketsTotales - metricas.ticketsAbiertos), total: metricas.ticketsTotales, color: 'var(--success)' },
-                { label: 'Activos y Sistemas registrados',   value: metricas.activosOperativos, total: null, color: 'var(--info)'    },
-                { label: 'Cambios RFC pendientes',           value: metricas.cambiosPendientes, total: null, color: 'var(--warning)' },
-              ].map(({ label, value, total, color }) => {
-                const pct = total ? Math.round((value / (total || 1)) * 100) : null;
-                return (
-                  <div key={label} className="status-row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>{label}</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {pct !== null && <span style={{ fontSize: 10.5, color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>{pct}%</span>}
-                        <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--mono)' }}>{value}</span>
-                      </div>
-                    </div>
-                    {total !== null && (
-                      <div style={{ height: 3, background: 'var(--border)', borderRadius: 2, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 2, transition: 'width 0.6s ease', opacity: 0.8 }} />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+          {/* GRÁFICO DE LÍNEAS: INCIDENTES VS REQUERIMIENTOS */}
+          <div className="chart-panel">
+            <span className="panel-title">Volumen de Demanda</span>
+            <div style={{ width: '100%', height: 280 }}>
+              <ResponsiveContainer>
+                <LineChart data={datosTendencia} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                  <XAxis 
+                    dataKey="tipo" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--mono)' }} 
+                    dy={10}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--mono)' }} 
+                  />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="custom-tooltip">
+                            <div className="tooltip-label">{payload[0].payload.tipo}</div>
+                            <div className="tooltip-value">Registrados: {payload[0].value}</div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="valor" 
+                    stroke="var(--accent)" 
+                    strokeWidth={2} 
+                    dot={{ r: 4, fill: 'var(--surface)', stroke: 'var(--accent)', strokeWidth: 2 }} 
+                    activeDot={{ r: 6 }} 
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
+
         </div>
       )}
     </div>

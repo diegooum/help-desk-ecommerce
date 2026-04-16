@@ -63,7 +63,6 @@ function Modal({ open, onClose, children }) {
 
 /* ─────────────────────────────────────────────
    BADGES Y COMPONENTES VISUALES
-   → Estilo editorial: borde fino + texto a color, sin fondo
 ───────────────────────────────────────────── */
 function PriorityBadge({ value }) {
   const s = {
@@ -136,6 +135,10 @@ function Tickets() {
   const [toasts, setToasts] = useState([]);
   const [hoveredRow, setHoveredRow] = useState(null);
 
+  // Estados para Búsqueda y Filtros
+  const [busqueda, setBusqueda] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('Todos');
+
   const [nuevoTicket, setNuevoTicket] = useState({
     titulo: '', descripcion: '', tipo: 'incidente', prioridad: 'Media', servicio: CATALOGO_SERVICIOS[0]
   });
@@ -147,7 +150,6 @@ function Tickets() {
   const removeToast = useCallback((id) => setToasts((p) => p.filter((t) => t.id !== id)), []);
 
   useEffect(() => { 
-    // Identificar quién está logueado
     supabase.auth.getUser().then(({ data: { user } }) => {
       setCurrentUser(user);
     });
@@ -182,7 +184,7 @@ function Tickets() {
         sla_horas:       slaAsignado,
         estado:          'Abierto',
         usuario_creador: currentUser?.email || 'usuario@utalca.cl',
-        agente_asignado: null // Nace sin agente
+        agente_asignado: null 
       }]);
       
       if (error) throw error;
@@ -213,6 +215,59 @@ function Tickets() {
       addToast('Error de asignación', error.message, 'error');
     }
   };
+
+  // Función para exportar a Excel
+  const exportarExcel = () => {
+    if (tickets.length === 0) return addToast('Sin datos', 'No hay tickets para exportar.', 'error');
+    
+    const cabeceras = ["Asunto", "Usuario Creador", "ID Ticket", "Servicio Afectado", "Tipo", "Prioridad", "Estado", "Agente Asignado", "SLA (Horas)", "Fecha Creación"];
+    const filas = ticketsFiltrados.map(t => [
+      `"${t.titulo.replace(/"/g, '""')}"`,
+      `"${t.usuario_creador || ''}"`,
+      t.id,
+      `"${t.servicio || ''}"`,
+      t.tipo,
+      t.prioridad,
+      t.estado,
+      `"${t.agente_asignado || 'Sin asignar'}"`,
+      t.sla_horas,
+      `"${new Date(t.fecha_creacion).toLocaleString('es-CL')}"`
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF"
+      + cabeceras.join(";") + "\n"
+      + filas.map(e => e.join(";")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Reporte_ServiceDesk_UTalca_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Función para calcular alerta de SLA
+  const esAlertaSLA = (ticket) => {
+    if (ticket.estado === 'Solucionado' || ticket.estado === 'Cerrado') return false;
+    if (!ticket.fecha_creacion) return false;
+    
+    const creacion = new Date(ticket.fecha_creacion);
+    const ahora = new Date();
+    const horasTranscurridas = (ahora - creacion) / (1000 * 60 * 60);
+    
+    // Si ha consumido el 80% del tiempo permitido, lanza alerta
+    return horasTranscurridas >= (ticket.sla_horas * 0.8);
+  };
+
+  // Lógica de filtrado
+  const ticketsFiltrados = tickets.filter(t => {
+    const coincideBusqueda = t.titulo.toLowerCase().includes(busqueda.toLowerCase()) || 
+                             (t.servicio && t.servicio.toLowerCase().includes(busqueda.toLowerCase())) ||
+                             (t.usuario_creador && t.usuario_creador.toLowerCase().includes(busqueda.toLowerCase()));
+    const coincideEstado = filtroEstado === 'Todos' || t.estado === filtroEstado;
+    return coincideBusqueda && coincideEstado;
+  });
 
   const openCount    = tickets.filter(t => t.estado === 'Abierto').length;
   const resolvedCount = tickets.filter(t => t.estado === 'Solucionado' || t.estado === 'Cerrado').length;
@@ -517,6 +572,21 @@ function Tickets() {
           grid-template-columns: 1fr 1fr;
           gap: 16px;
         }
+        
+        /* ── SEARCH & FILTER ── */
+        .filter-bar {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 16px;
+          align-items: center;
+        }
+        .filter-input {
+          flex: 1;
+          max-width: 320px;
+        }
+        .filter-select {
+          width: 200px;
+        }
       `}</style>
 
       {/* Toolbar */}
@@ -526,6 +596,10 @@ function Tickets() {
           <p className="tk-subtitle">Gestión centralizada de incidentes y requerimientos</p>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button className="btn-ghost" onClick={exportarExcel} title="Exportar a CSV">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Exportar
+          </button>
           <button className="btn-ghost" onClick={obtenerTickets}>Actualizar</button>
           <button className="btn-primary" onClick={() => setMostrarFormulario(true)}>Nuevo Ticket</button>
         </div>
@@ -546,6 +620,33 @@ function Tickets() {
               <span className="stat-value">{value}</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Barra de Filtros */}
+      {!loading && tickets.length > 0 && (
+        <div className="filter-bar">
+          <input 
+            type="text" 
+            placeholder="Buscar por asunto, servicio o usuario..." 
+            style={{ ...fieldBase, width: '100%', maxWidth: '350px' }}
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            onFocus={onFocus} onBlur={onBlur}
+          />
+          <select 
+            style={{ ...fieldBase, width: '220px', flexShrink: 0 }}
+            value={filtroEstado}
+            onChange={(e) => setFiltroEstado(e.target.value)}
+            onFocus={onFocus} onBlur={onBlur}
+          >
+            <option value="Todos">Todos los estados</option>
+            <option value="Abierto">Abierto</option>
+            <option value="En espera del usuario">En espera del usuario</option>
+            <option value="En espera de un tercero">En espera de un tercero</option>
+            <option value="Solucionado">Solucionado</option>
+            <option value="Cerrado">Cerrado</option>
+          </select>
         </div>
       )}
 
@@ -572,18 +673,18 @@ function Tickets() {
                     <td><div className="sk" style={{ height: 20, width: 100 }} /></td>
                   </tr>
                 ))
-              : tickets.length === 0
+              : ticketsFiltrados.length === 0
               ? (
                   <tr>
                     <td colSpan={5}>
                       <div className="empty-state">
-                        <p className="empty-title">Sin tickets registrados</p>
-                        <p style={{ fontSize: 12.5 }}>Haz clic en "Nuevo Ticket" para reportar una falla o solicitud.</p>
+                        <p className="empty-title">No hay resultados</p>
+                        <p style={{ fontSize: 12.5 }}>Intenta ajustar los filtros de búsqueda.</p>
                       </div>
                     </td>
                   </tr>
                 )
-              : tickets.map((ticket) => (
+              : ticketsFiltrados.map((ticket) => (
                   <tr
                     key={ticket.id}
                     className={hoveredRow === ticket.id ? 'tk-row-hover' : ''}
@@ -602,6 +703,7 @@ function Tickets() {
                       <div style={{ marginTop: 5, fontSize: 10, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--mono)' }}>
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         SLA: {ticket.sla_horas ? `${ticket.sla_horas}h` : (ticket.tipo === 'incidente' ? '8h' : '24h')}
+                        {esAlertaSLA(ticket) && <span style={{ color: 'var(--danger)', fontWeight: 700, marginLeft: 2 }}>⚠️ Peligro SLA</span>}
                       </div>
                     </td>
                     <td><PriorityBadge value={ticket.prioridad} /></td>
@@ -610,7 +712,7 @@ function Tickets() {
                         <StatusBadge value={ticket.estado} />
                       </div>
                       
-                      {/* LÓGICA DE AUTOASIGNACIÓN (SOLO AGENTES) */}
+                      {/* LÓGICA DE AUTOASIGNACIÓN */}
                       {ticket.agente_asignado ? (
                         <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>
                           Agente: <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{ticket.agente_asignado.split('@')[0]}</span>

@@ -49,77 +49,79 @@ function App() {
   return (
     <Router>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         html, body, #root { height: 100%; width: 100%; }
 
         :root {
-          --font: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-          --mono: 'Courier New', Courier, monospace;
+          --font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          --mono: 'DM Mono', 'Courier New', Courier, monospace;
         }
 
         [data-theme="light"] {
-          --bg:             #eef1f6;
-          --surface:        #ffffff;
-          --surface-2:      #f8fafc;
-          --surface-hover:  #f1f5f9;
-          --border:         #dde3ec;
-          --border-strong:  #c4cfd e; /* Ojo aquí, había un espacio en el código original pero lo dejé igual para no romperte nada */
-          --text-primary:   #0c1a2e;
-          --text-secondary: #3d5473;
-          --text-muted:     #8499b4;
-          --sidebar-bg:     #0b1422;
-          --sidebar-border: #141f30;
-          --sidebar-text:   #4a617a;
-          --sidebar-hover:  rgba(255,255,255,0.04);
-          --sidebar-active: #0e2040;
-          --sidebar-accent: #3b82f6;
-          --accent:         #2563eb;
-          --accent-hover:   #1d4ed8;
-          --accent-dim:     #eff6ff;
-          --success:        #059669;
-          --success-dim:    #ecfdf5;
-          --warning:        #d97706;
-          --warning-dim:    #fffbeb;
-          --danger:         #dc2626;
-          --danger-dim:     #fef2f2;
-          --info:           #6d28d9;
-          --info-dim:       #f5f3ff;
-          --shadow-card:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-          --shadow-modal:   0 20px 60px rgba(0,0,0,0.15);
-          --overlay:        rgba(15,23,42,0.5);
+          --bg:             #FAFAFA;
+          --surface:        #FFFFFF;
+          --surface-2:      #F5F5F5;
+          --surface-hover:  #F0F0F0;
+          --border:         #E8E8E8;
+          --border-strong:  #0A0A0A;
+          --text-primary:   #0A0A0A;
+          --text-secondary: #555555;
+          --text-muted:     #999999;
+          --sidebar-bg:     #FFFFFF;
+          --sidebar-border: #E8E8E8;
+          --sidebar-text:   #999999;
+          --sidebar-hover:  #F5F5F5;
+          --sidebar-active: #F5F5F5;
+          --sidebar-accent: #0A0A0A;
+          --accent:         #0A0A0A;
+          --accent-hover:   #333333;
+          --accent-dim:     #F0F0F0;
+          --success:        #16A34A;
+          --success-dim:    #F0FDF4;
+          --warning:        #B45309;
+          --warning-dim:    #FFFBEB;
+          --danger:         #DC2626;
+          --danger-dim:     #FEF2F2;
+          --info:           #6D28D9;
+          --info-dim:       #F5F3FF;
+          --shadow-card:    none;
+          --shadow-modal:   none;
+          --overlay:        rgba(0,0,0,0.25);
         }
 
         [data-theme="dark"] {
-          --bg:             #07101c;
-          --surface:        #0e1d2e;
-          --surface-2:      #0a1524;
-          --surface-hover:  #132031;
-          --border:         #1a2d42;
-          --border-strong:  #243d57;
-          --text-primary:   #dce8f5;
-          --text-secondary: #7a9bbf;
-          --text-muted:     #3d5473;
-          --sidebar-bg:     #050e18;
-          --sidebar-border: #0e1d2e;
-          --sidebar-text:   #3d5473;
-          --sidebar-hover:  rgba(255,255,255,0.03);
-          --sidebar-active: #0a1f38;
-          --sidebar-accent: #3b82f6;
-          --accent:         #3b82f6;
-          --accent-hover:   #2563eb;
-          --accent-dim:     #0a1f38;
-          --success:        #10b981;
-          --success-dim:    #041f12;
-          --warning:        #f59e0b;
-          --warning-dim:    #1f1303;
-          --danger:         #f87171;
-          --danger-dim:     #200606;
-          --info:           #a78bfa;
-          --info-dim:       #12083a;
-          --shadow-card:    0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
-          --shadow-modal:   0 20px 60px rgba(0,0,0,0.6);
-          --overlay:        rgba(3,8,16,0.75);
+          --bg:             #0F0F0F;
+          --surface:        #1A1A1A;
+          --surface-2:      #141414;
+          --surface-hover:  #222222;
+          --border:         #2A2A2A;
+          --border-strong:  #888888;
+          --text-primary:   #F0F0F0;
+          --text-secondary: #AAAAAA;
+          --text-muted:     #666666;
+          --sidebar-bg:     #111111;
+          --sidebar-border: #1E1E1E;
+          --sidebar-text:   #555555;
+          --sidebar-hover:  rgba(255,255,255,0.04);
+          --sidebar-active: #1E1E1E;
+          --sidebar-accent: #F0F0F0;
+          --accent:         #FFFFFF;
+          --accent-hover:   #DDDDDD;
+          --accent-dim:     #1E1E1E;
+          --success:        #22C55E;
+          --success-dim:    #0A2A14;
+          --warning:        #F59E0B;
+          --warning-dim:    #2A1A00;
+          --danger:         #EF4444;
+          --danger-dim:     #2A0A0A;
+          --info:           #A78BFA;
+          --info-dim:       #1A0A3A;
+          --shadow-card:    none;
+          --shadow-modal:   none;
+          --overlay:        rgba(0,0,0,0.6);
         }
 
         body {
@@ -140,8 +142,8 @@ function App() {
 
         /* ── SIDEBAR ── */
         .sidebar {
-          width: 218px;
-          min-width: 218px;
+          width: 220px;
+          min-width: 220px;
           background: var(--sidebar-bg);
           display: flex;
           flex-direction: column;
@@ -152,67 +154,44 @@ function App() {
         .sidebar::-webkit-scrollbar { display: none; }
 
         .sidebar-header {
-          padding: 18px 14px 15px;
+          padding: 22px 18px 18px;
           border-bottom: 1px solid var(--sidebar-border);
         }
 
         .sidebar-logo {
           display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .sidebar-logo-mark {
-          width: 30px;
-          height: 30px;
-          background: var(--accent);
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-
-        .sidebar-logo-mark svg {
-          width: 15px;
-          height: 15px;
-          stroke: white;
-          fill: none;
-          stroke-width: 2;
-          stroke-linecap: round;
-          stroke-linejoin: round;
+          flex-direction: column;
+          gap: 2px;
         }
 
         .sidebar-logo-title {
-          font-size: 11px;
-          font-weight: 700;
-          color: #c8d8eb;
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text-primary);
+          letter-spacing: -0.01em;
           line-height: 1.3;
         }
 
         .sidebar-logo-sub {
-          font-size: 9.5px;
-          color: #1e3a5f;
+          font-size: 10.5px;
+          color: var(--text-muted);
           font-family: var(--mono);
-          letter-spacing: 0.03em;
-          margin-top: 1px;
+          letter-spacing: 0.02em;
         }
 
         .sidebar-section {
-          padding: 16px 8px 8px;
+          padding: 18px 12px 8px;
           flex: 1;
         }
 
         .sidebar-section-label {
           font-size: 9px;
-          font-weight: 700;
-          letter-spacing: 0.12em;
+          font-weight: 600;
+          letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: #1a2d42;
+          color: var(--text-muted);
           padding: 0 8px;
-          margin-bottom: 5px;
+          margin-bottom: 6px;
         }
 
         .sidebar-nav {
@@ -225,9 +204,9 @@ function App() {
         .nav-link {
           display: flex;
           align-items: center;
-          gap: 9px;
-          padding: 7px 10px;
-          border-radius: 5px;
+          gap: 10px;
+          padding: 8px 10px;
+          border-radius: 4px;
           font-size: 12.5px;
           font-weight: 400;
           color: var(--sidebar-text);
@@ -240,12 +219,12 @@ function App() {
 
         .nav-link:hover {
           background: var(--sidebar-hover);
-          color: #6b8aaa;
+          color: var(--text-primary);
         }
 
         .nav-link.active {
           background: var(--sidebar-active);
-          color: #c8d8eb;
+          color: var(--text-primary);
           font-weight: 500;
         }
 
@@ -255,8 +234,8 @@ function App() {
           left: 0;
           top: 50%;
           transform: translateY(-50%);
-          width: 2.5px;
-          height: 14px;
+          width: 2px;
+          height: 16px;
           background: var(--sidebar-accent);
           border-radius: 0 2px 2px 0;
         }
@@ -265,7 +244,7 @@ function App() {
           width: 14px;
           height: 14px;
           flex-shrink: 0;
-          opacity: 0.5;
+          opacity: 0.4;
         }
 
         .nav-link:hover .nav-link-icon { opacity: 0.7; }
@@ -273,7 +252,7 @@ function App() {
 
         /* ── SIDEBAR FOOTER ── */
         .sidebar-footer {
-          padding: 10px 8px 12px;
+          padding: 10px 12px 14px;
           border-top: 1px solid var(--sidebar-border);
           display: flex;
           flex-direction: column;
@@ -285,7 +264,7 @@ function App() {
           align-items: center;
           justify-content: space-between;
           padding: 7px 10px;
-          border-radius: 5px;
+          border-radius: 4px;
           cursor: pointer;
           border: none;
           background: none;
@@ -301,43 +280,48 @@ function App() {
           align-items: center;
           gap: 8px;
           font-size: 12px;
-          color: #2d4460;
+          color: var(--sidebar-text);
           font-weight: 400;
         }
 
         .toggle-track {
-          width: 28px;
-          height: 16px;
+          width: 26px;
+          height: 14px;
           border-radius: 99px;
-          background: #141f30;
+          background: transparent;
           position: relative;
           transition: background 0.2s;
           flex-shrink: 0;
-          border: 1px solid #1a2d42;
+          border: 1px solid var(--border-strong);
         }
 
-        .toggle-track.on { background: var(--accent); border-color: var(--accent); }
+        .toggle-track.on {
+          background: var(--sidebar-accent);
+          border-color: var(--sidebar-accent);
+        }
 
         .toggle-thumb {
           position: absolute;
-          top: 1.5px;
-          left: 1.5px;
-          width: 11px;
-          height: 11px;
+          top: 2px;
+          left: 2px;
+          width: 8px;
+          height: 8px;
           border-radius: 50%;
-          background: #2a3f57;
+          background: var(--text-muted);
           transition: transform 0.2s, background 0.2s;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
 
-        .toggle-track.on .toggle-thumb { transform: translateX(12px); background: white; }
+        .toggle-track.on .toggle-thumb {
+          transform: translateX(12px);
+          background: var(--sidebar-bg);
+        }
 
         .sidebar-footer-user {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 9px;
           padding: 7px 10px;
-          border-radius: 5px;
+          border-radius: 4px;
           cursor: pointer;
           transition: background 0.1s;
         }
@@ -347,20 +331,22 @@ function App() {
         .user-avatar {
           width: 26px;
           height: 26px;
-          border-radius: 6px;
-          background: #0e2040;
+          border-radius: 4px;
+          background: var(--surface-2);
+          border: 1px solid var(--border);
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 9.5px;
-          font-weight: 700;
-          color: #4a90d9;
+          font-size: 9px;
+          font-weight: 600;
+          color: var(--text-secondary);
           flex-shrink: 0;
           letter-spacing: 0.05em;
+          font-family: var(--mono);
         }
 
-        .user-name { font-size: 11.5px; font-weight: 500; color: #3d5473; line-height: 1; }
-        .user-role { font-size: 9px; color: #1e3a5f; font-family: var(--mono); margin-top: 2px; }
+        .user-name { font-size: 11.5px; font-weight: 500; color: var(--text-secondary); line-height: 1; }
+        .user-role { font-size: 9px; color: var(--danger); font-family: var(--mono); margin-top: 2px; letter-spacing: 0.02em; }
 
         /* ── MAIN ── */
         .main-content {
@@ -371,9 +357,9 @@ function App() {
         }
 
         /* ── SCROLLBAR ── */
-        .main-content::-webkit-scrollbar { width: 6px; }
+        .main-content::-webkit-scrollbar { width: 4px; }
         .main-content::-webkit-scrollbar-track { background: transparent; }
-        .main-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        .main-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
         .main-content::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
       `}</style>
 
@@ -381,13 +367,8 @@ function App() {
         <aside className="sidebar">
           <div className="sidebar-header">
             <div className="sidebar-logo">
-              <div className="sidebar-logo-mark">
-                <svg viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
-              </div>
-              <div>
-                <div className="sidebar-logo-title">Mesa de Ayuda</div>
-                <div className="sidebar-logo-sub">E-commerce Ops</div>
-              </div>
+              <div className="sidebar-logo-title">Mesa de Ayuda</div>
+              <div className="sidebar-logo-sub">Universidad de Talca</div>
             </div>
           </div>
 
@@ -412,7 +393,7 @@ function App() {
                   ? <SunIcon style={{ width: 13, height: 13 }} />
                   : <MoonIcon style={{ width: 13, height: 13 }} />
                 }
-                <span style={{ color: '#2d4460', fontSize: 12 }}>{dark ? 'Modo claro' : 'Modo oscuro'}</span>
+                <span>{dark ? 'Modo claro' : 'Modo oscuro'}</span>
               </span>
               <div className={`toggle-track${dark ? ' on' : ''}`}>
                 <div className="toggle-thumb" />
@@ -425,7 +406,7 @@ function App() {
                 <div className="user-name" style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
                   {session?.user?.email}
                 </div>
-                <div className="user-role" style={{ color: '#ef4444' }}>Cerrar sesión</div>
+                <div className="user-role">Cerrar sesión</div>
               </div>
             </div>
           </div>
@@ -462,10 +443,10 @@ function BookIcon({ className }) {
   return <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2h9a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3"/><line x1="3" y1="2" x2="3" y2="14"/><line x1="7" y1="6" x2="11" y2="6"/><line x1="7" y1="9" x2="11" y2="9"/></svg>;
 }
 function MoonIcon({ style }) {
-  return <svg style={style} viewBox="0 0 16 16" fill="none" stroke="#2d4460" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M13.5 10A6 6 0 0 1 6 2.5a6 6 0 1 0 7.5 7.5z"/></svg>;
+  return <svg style={style} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M13.5 10A6 6 0 0 1 6 2.5a6 6 0 1 0 7.5 7.5z"/></svg>;
 }
 function SunIcon({ style }) {
-  return <svg style={style} viewBox="0 0 16 16" fill="none" stroke="#2d4460" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="2.8"/><line x1="8" y1="1.5" x2="8" y2="3"/><line x1="8" y1="13" x2="8" y2="14.5"/><line x1="1.5" y1="8" x2="3" y2="8"/><line x1="13" y1="8" x2="14.5" y2="8"/><line x1="3.4" y1="3.4" x2="4.4" y2="4.4"/><line x1="11.6" y1="11.6" x2="12.6" y2="12.6"/><line x1="12.6" y1="3.4" x2="11.6" y2="4.4"/><line x1="4.4" y1="11.6" x2="3.4" y2="12.6"/></svg>;
+  return <svg style={style} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="8" r="2.8"/><line x1="8" y1="1.5" x2="8" y2="3"/><line x1="8" y1="13" x2="8" y2="14.5"/><line x1="1.5" y1="8" x2="3" y2="8"/><line x1="13" y1="8" x2="14.5" y2="8"/><line x1="3.4" y1="3.4" x2="4.4" y2="4.4"/><line x1="11.6" y1="11.6" x2="12.6" y2="12.6"/><line x1="12.6" y1="3.4" x2="11.6" y2="4.4"/><line x1="4.4" y1="11.6" x2="3.4" y2="12.6"/></svg>;
 }
 
 export default App;

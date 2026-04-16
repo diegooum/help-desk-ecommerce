@@ -1,10 +1,9 @@
 /**
- * Login.jsx — Mission Control · Redesign v2
- * Aesthetic: Tactical Enterprise (dark, precise, technical) + Video HD Background
- * Typography: IBM Plex Mono (labels/data) + IBM Plex Sans (body)
+ * Login.jsx — Service Desk · Redesign Editorial
+ * Aesthetic: Ultra-minimalist, split-screen typographic layout
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
 
 /* ─────────────────────────────────────────────
@@ -56,81 +55,6 @@ function classifyError(error) {
   if (msg.includes('too many') || msg.includes('locked')) return ERROR_TYPES.ACCOUNT_LOCKED;
   if (msg.includes('fetch') || msg.includes('network') || msg.includes('unable')) return ERROR_TYPES.NETWORK_ERROR;
   return ERROR_TYPES.INVALID_CREDENTIALS;
-}
-
-/* ─────────────────────────────────────────────
-   Animated grid background (Canvas)
-───────────────────────────────────────────── */
-function GridCanvas() {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    let raf;
-    let t = 0;
-
-    const COLS = 28;
-    const ROWS = 18;
-
-    function resize() {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-    }
-
-    function draw() {
-      const w = canvas.width;
-      const h = canvas.height;
-      ctx.clearRect(0, 0, w, h);
-
-      const cw = w / COLS;
-      const ch = h / ROWS;
-
-      for (let col = 0; col <= COLS; col++) {
-        for (let row = 0; row <= ROWS; row++) {
-          const x = col * cw;
-          const y = row * ch;
-
-          const wave = Math.sin(t * 0.018 + col * 0.4 + row * 0.3);
-          const alpha = 0.04 + 0.06 * ((wave + 1) / 2);
-
-          ctx.beginPath();
-          ctx.arc(x, y, 1.2, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(148, 163, 184, ${alpha})`;
-          ctx.fill();
-        }
-      }
-
-      ctx.strokeStyle = 'rgba(148, 163, 184, 0.04)';
-      ctx.lineWidth = 0.5;
-      for (let col = 0; col <= COLS; col++) {
-        ctx.beginPath();
-        ctx.moveTo(col * cw, 0);
-        ctx.lineTo(col * cw, h);
-        ctx.stroke();
-      }
-      for (let row = 0; row <= ROWS; row++) {
-        ctx.beginPath();
-        ctx.moveTo(0, row * ch);
-        ctx.lineTo(w, row * ch);
-        ctx.stroke();
-      }
-
-      t++;
-      raf = requestAnimationFrame(draw);
-    }
-
-    resize();
-    draw();
-    window.addEventListener('resize', resize);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('resize', resize);
-    };
-  }, []);
-
-  return <canvas ref={ref} className="mc-canvas" aria-hidden="true" />;
 }
 
 /* ─────────────────────────────────────────────
@@ -211,189 +135,188 @@ function Login({ onLoginSuccess }) {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
-
-        :root {
-          --mc-bg:          #060b14;
-          --mc-surface:     rgba(10, 17, 31, 0.72);
-          --mc-border:      rgba(148, 163, 184, 0.12);
-          --mc-border-focus:rgba(56, 139, 253, 0.75);
-          --mc-text-primary:#e2e8f0;
-          --mc-text-muted:  #64748b;
-          --mc-text-dim:    #334155;
-          --mc-accent:      #2563eb;
-          --mc-accent-hover:#1d4ed8;
-          --mc-accent-glow: rgba(37, 99, 235, 0.25);
-          --mc-error:       #ef4444;
-          --mc-error-bg:    rgba(239, 68, 68, 0.06);
-          --mc-error-border:rgba(239, 68, 68, 0.3);
-          --mc-success:     #22c55e;
-          --mc-mono:        'IBM Plex Mono', 'Courier New', monospace;
-          --mc-sans:        'IBM Plex Sans', system-ui, sans-serif;
-          --mc-radius:      10px;
-          --mc-radius-sm:   6px;
-          --mc-transition:  0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap');
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .mc-root {
-          position: relative;
-          width: 100vw;
-          height: 100vh;
-          overflow: hidden;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--mc-bg);
-          font-family: var(--mc-sans);
+        :root {
+          --mc-bg:           #FFFFFF;
+          --mc-panel-bg:     #FAFAFA;
+          --mc-left-bg:      #0A0A0A;
+          --mc-border:       #E8E8E8;
+          --mc-border-focus: #0A0A0A;
+          --mc-text-primary: #0A0A0A;
+          --mc-text-muted:   #999999;
+          --mc-text-dim:     #CCCCCC;
+          --mc-accent:       #0A0A0A;
+          --mc-accent-hover: #333333;
+          --mc-error:        #DC2626;
+          --mc-error-bg:     #FEF2F2;
+          --mc-error-border: #FECACA;
+          --mc-success:      #16A34A;
+          --mc-mono:         'DM Mono', 'Courier New', monospace;
+          --mc-sans:         'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+          --mc-transition:   0.18s ease;
         }
 
-        /* ── VIDEO HD BACKGROUND ── */
-        .mc-video {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 100vw;
-          height: 100vh;
-          object-fit: cover;
-          transform: translate(-50%, -50%);
-          z-index: 0;
-          opacity: 0.35; /* Oscurecido para no opacar el panel */
-        }
-
-        .mc-canvas {
-          position: absolute;
-          inset: 0;
-          width: 100%;
+        body, html, #root {
           height: 100%;
-          z-index: 1; /* Encima del video */
-        }
-
-        .mc-glow {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(37,99,235,0.07) 0%, transparent 70%);
-          z-index: 2; /* Encima del canvas */
-          pointer-events: none;
-        }
-
-        .mc-panel {
-          position: relative;
-          z-index: 3; /* Encima de todo */
           width: 100%;
-          max-width: 400px;
-          margin: 0 1rem;
-          background: var(--mc-surface);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border: 1px solid var(--mc-border);
-          border-radius: 14px;
-          padding: 40px 36px 32px;
-          animation: mc-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
-        @keyframes mc-rise {
-          from { opacity: 0; transform: translateY(18px) scale(0.98); }
-          to   { opacity: 1; transform: translateY(0)  scale(1); }
+        .mc-root {
+          display: flex;
+          width: 100vw;
+          height: 100vh;
+          font-family: var(--mc-sans);
+          background: var(--mc-bg);
+          -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── LEFT PANEL (Editorial Statement) ── */
+        .mc-left {
+          flex: 1;
+          background: var(--mc-left-bg);
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          padding: 48px 52px;
+          overflow: hidden;
+          position: relative;
+        }
+
+        .mc-left-top {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .mc-left-tag {
+          font-family: var(--mc-mono);
+          font-size: 10px;
+          font-weight: 500;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.35);
+        }
+
+        .mc-left-brand {
+          font-size: 14px;
+          font-weight: 500;
+          color: rgba(255,255,255,0.9);
+          letter-spacing: -0.01em;
+        }
+
+        .mc-left-center {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .mc-left-headline {
+          font-size: clamp(44px, 5.5vw, 72px);
+          font-weight: 300;
+          line-height: 1.05;
+          letter-spacing: -0.035em;
+          color: #FFFFFF;
+        }
+
+        .mc-left-headline em {
+          font-style: italic;
+          font-weight: 300;
+          color: rgba(255,255,255,0.5);
+        }
+
+        .mc-left-desc {
+          font-size: 14px;
+          font-weight: 400;
+          line-height: 1.6;
+          color: rgba(255,255,255,0.4);
+          max-width: 320px;
+        }
+
+        .mc-left-bottom {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .mc-left-divider {
+          width: 32px;
+          height: 1px;
+          background: rgba(255,255,255,0.15);
+          margin-bottom: 8px;
+        }
+
+        .mc-left-footer-label {
+          font-family: var(--mc-mono);
+          font-size: 9.5px;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.2);
+        }
+
+        /* ── RIGHT PANEL (Form) ── */
+        .mc-right {
+          width: 440px;
+          min-width: 440px;
+          background: var(--mc-bg);
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          padding: 60px 52px;
+          border-left: 1px solid var(--mc-border);
         }
 
         .mc-header {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          margin-bottom: 32px;
-          gap: 10px;
+          margin-bottom: 40px;
         }
 
-        .mc-logo {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 6px;
-        }
-
-        .mc-logo-icon {
-          width: 34px;
-          height: 34px;
-          border: 1.5px solid rgba(37, 99, 235, 0.55);
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #60a5fa;
-          flex-shrink: 0;
-        }
-
-        .mc-product {
+        .mc-eyebrow {
           font-family: var(--mc-mono);
-          font-size: 11px;
-          font-weight: 500;
-          letter-spacing: 0.15em;
+          font-size: 9.5px;
+          letter-spacing: 0.16em;
           text-transform: uppercase;
-          color: #3b82f6;
+          color: var(--mc-text-muted);
+          margin-bottom: 12px;
         }
 
         .mc-title {
-          font-size: 20px;
-          font-weight: 600;
-          letter-spacing: -0.01em;
+          font-size: 26px;
+          font-weight: 500;
+          letter-spacing: -0.025em;
           color: var(--mc-text-primary);
           line-height: 1.2;
+          margin-bottom: 8px;
         }
 
         .mc-subtitle {
-          font-size: 12.5px;
+          font-size: 13px;
           color: var(--mc-text-muted);
           font-weight: 400;
           line-height: 1.5;
         }
 
-        .mc-ssl {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          font-family: var(--mc-mono);
-          font-size: 10px;
-          letter-spacing: 0.08em;
-          color: #22c55e;
-          opacity: 0.75;
-          margin-top: 2px;
-        }
-
-        .mc-ssl-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: #22c55e;
-          animation: mc-pulse 2.4s ease-in-out infinite;
-        }
-
-        @keyframes mc-pulse {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.35; }
-        }
-
+        /* ── FORM ── */
         .mc-form {
           display: flex;
           flex-direction: column;
-          gap: 22px;
+          gap: 28px;
         }
 
         .mc-field {
           position: relative;
-          padding-top: 18px;
+          padding-top: 20px;
         }
 
         .mc-label {
           position: absolute;
-          top: 18px;
+          top: 20px;
           left: 0;
           font-family: var(--mc-mono);
-          font-size: 12.5px;
+          font-size: 13px;
           color: var(--mc-text-muted);
-          letter-spacing: 0.04em;
+          letter-spacing: 0.02em;
           pointer-events: none;
           transition: top var(--mc-transition), font-size var(--mc-transition), color var(--mc-transition), letter-spacing var(--mc-transition);
           transform-origin: left top;
@@ -401,14 +324,14 @@ function Login({ onLoginSuccess }) {
 
         .mc-field--lifted .mc-label {
           top: 0;
-          font-size: 10px;
-          letter-spacing: 0.1em;
+          font-size: 9.5px;
+          letter-spacing: 0.14em;
           text-transform: uppercase;
           color: var(--mc-text-dim);
         }
 
         .mc-field--focused .mc-label {
-          color: #3b82f6;
+          color: var(--mc-text-primary);
         }
 
         .mc-input {
@@ -418,12 +341,12 @@ function Login({ onLoginSuccess }) {
           border-radius: 0;
           outline: none;
           color: var(--mc-text-primary);
-          font-family: var(--mc-mono);
-          font-size: 13.5px;
+          font-family: var(--mc-sans);
+          font-size: 15px;
           font-weight: 400;
-          letter-spacing: 0.03em;
-          padding: 6px 0 8px;
-          caret-color: #3b82f6;
+          letter-spacing: -0.01em;
+          padding: 6px 0 10px;
+          caret-color: var(--mc-text-primary);
         }
 
         .mc-input::placeholder { color: transparent; }
@@ -443,166 +366,163 @@ function Login({ onLoginSuccess }) {
 
         .mc-field--focused .mc-input-line {
           background: var(--mc-border-focus);
+          height: 1.5px;
         }
 
+        /* ── ERROR ── */
         .mc-error {
           background: var(--mc-error-bg);
           border: 1px solid var(--mc-error-border);
-          border-radius: var(--mc-radius-sm);
+          border-radius: 4px;
           padding: 12px 14px;
           animation: mc-shake 0.35s cubic-bezier(.36,.07,.19,.97) both;
         }
 
         @keyframes mc-shake {
           0%, 100% { transform: translateX(0); }
-          20%       { transform: translateX(-5px); }
-          40%       { transform: translateX(5px); }
-          60%       { transform: translateX(-3px); }
-          80%       { transform: translateX(3px); }
+          20%       { transform: translateX(-4px); }
+          40%       { transform: translateX(4px); }
+          60%       { transform: translateX(-2px); }
+          80%       { transform: translateX(2px); }
         }
 
         .mc-error__header {
           display: flex;
           align-items: center;
           gap: 7px;
-          margin-bottom: 5px;
+          margin-bottom: 4px;
         }
 
         .mc-err-icon {
-          width: 14px;
-          height: 14px;
+          width: 13px;
+          height: 13px;
           color: var(--mc-error);
           flex-shrink: 0;
         }
 
         .mc-error__code {
           font-family: var(--mc-mono);
-          font-size: 10px;
-          letter-spacing: 0.12em;
+          font-size: 9.5px;
+          letter-spacing: 0.1em;
           color: var(--mc-error);
-          opacity: 0.7;
+          opacity: 0.65;
           flex-shrink: 0;
         }
 
         .mc-error__title {
           font-size: 12.5px;
           font-weight: 500;
-          color: #fca5a5;
+          color: var(--mc-error);
         }
 
         .mc-error__detail {
           font-size: 11.5px;
-          color: rgba(252, 165, 165, 0.65);
+          color: var(--mc-error);
+          opacity: 0.7;
           line-height: 1.5;
-          padding-left: 21px;
+          padding-left: 20px;
         }
 
+        /* ── BUTTON ── */
         .mc-btn {
           position: relative;
           width: 100%;
-          padding: 12px 20px;
-          margin-top: 6px;
+          padding: 14px 20px;
+          margin-top: 4px;
           background: var(--mc-accent);
-          color: #fff;
-          border: none;
-          border-radius: var(--mc-radius-sm);
+          color: #FFFFFF;
+          border: 1px solid var(--mc-accent);
+          border-radius: 4px;
           font-family: var(--mc-mono);
-          font-size: 11.5px;
+          font-size: 11px;
           font-weight: 500;
-          letter-spacing: 0.14em;
+          letter-spacing: 0.16em;
           text-transform: uppercase;
           cursor: pointer;
-          transition: background var(--mc-transition), transform var(--mc-transition), box-shadow var(--mc-transition), opacity var(--mc-transition);
+          transition: background var(--mc-transition), opacity var(--mc-transition);
           overflow: hidden;
-          isolation: isolate;
         }
 
-        .mc-btn::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: rgba(255,255,255,0);
-          transition: background 0.15s;
-          border-radius: inherit;
+        .mc-btn:hover:not(:disabled) {
+          background: var(--mc-accent-hover);
+          border-color: var(--mc-accent-hover);
         }
 
-        .mc-btn:hover:not(:disabled)::after { background: rgba(255,255,255,0.06); }
-        .mc-btn:hover:not(:disabled) { box-shadow: 0 0 0 3px var(--mc-accent-glow); }
-        .mc-btn:active:not(:disabled) { transform: scale(0.985); }
-        .mc-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .mc-btn:active:not(:disabled) { opacity: 0.8; }
+        .mc-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        .mc-btn:focus-visible {
+          outline: 2px solid var(--mc-accent);
+          outline-offset: 3px;
+        }
 
         .mc-btn--success {
-          background: #15803d !important;
+          background: var(--mc-success) !important;
+          border-color: var(--mc-success) !important;
           pointer-events: none;
         }
 
         .mc-spinner {
           display: inline-block;
-          width: 11px;
-          height: 11px;
+          width: 10px;
+          height: 10px;
           border: 1.5px solid rgba(255,255,255,0.3);
-          border-top-color: #fff;
+          border-top-color: #FFFFFF;
           border-radius: 50%;
-          animation: mc-spin 0.65s linear infinite;
-          vertical-align: -2px;
+          animation: mc-spin 0.7s linear infinite;
+          vertical-align: -1px;
           margin-right: 8px;
         }
 
-        @keyframes mc-spin {
-          to { transform: rotate(360deg); }
-        }
+        @keyframes mc-spin { to { transform: rotate(360deg); } }
 
+        /* ── FOOTER ── */
         .mc-footer {
-          margin-top: 24px;
-          padding-top: 18px;
+          margin-top: 32px;
+          padding-top: 20px;
           border-top: 1px solid var(--mc-border);
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           justify-content: space-between;
-          gap: 12px;
+          gap: 16px;
         }
 
         .mc-footer-text {
           font-family: var(--mc-mono);
           font-size: 9.5px;
-          letter-spacing: 0.1em;
-          color: var(--mc-text-dim);
+          letter-spacing: 0.08em;
+          color: var(--mc-text-muted);
           text-transform: uppercase;
-          line-height: 1.6;
+          line-height: 1.7;
         }
 
         .mc-footer-link {
           font-family: var(--mc-mono);
-          font-size: 10px;
-          color: #334155;
+          font-size: 9.5px;
+          color: var(--mc-text-muted);
           text-decoration: none;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.06em;
           transition: color var(--mc-transition);
           white-space: nowrap;
           flex-shrink: 0;
         }
 
-        .mc-footer-link:hover { color: #60a5fa; }
+        .mc-footer-link:hover { color: var(--mc-text-primary); }
 
-        .mc-btn:focus-visible {
-          outline: 2px solid #3b82f6;
-          outline-offset: 2px;
-        }
-
-        .mc-input:focus-visible {
-          outline: none;
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+          .mc-left { display: none; }
+          .mc-right {
+            width: 100%;
+            min-width: unset;
+            padding: 48px 28px;
+            border-left: none;
+          }
         }
 
         @media (max-width: 480px) {
-          .mc-panel {
-            margin: 0;
-            border-radius: 0;
-            min-height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 40px 24px 32px;
-          }
+          .mc-right { padding: 40px 24px; }
+          .mc-title { font-size: 22px; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -614,41 +534,40 @@ function Login({ onLoginSuccess }) {
       `}</style>
 
       <div className="mc-root">
-        {/* VIDEO DE FONDO */}
-        <video autoPlay loop muted playsInline className="mc-video">
-          <source src="/fondo.mp4" type="video/mp4" />
-        </video>
 
-        {/* CUADRÍCULA ANIMADA */}
-        <GridCanvas />
-        <div className="mc-glow" aria-hidden="true" />
+        {/* ── LEFT: Editorial Statement ── */}
+        <div className="mc-left" aria-hidden="true">
+          <div className="mc-left-top">
+            <span className="mc-left-tag">Service Desk</span>
+            <span className="mc-left-brand">Universidad de Talca</span>
+          </div>
 
-        <main className="mc-panel" role="main">
-          {/* ── Header ── */}
+          <div className="mc-left-center">
+            <h1 className="mc-left-headline">
+              Gestión<br />
+              de Servicios<br />
+              <em>de TI</em>
+            </h1>
+            <p className="mc-left-desc">
+              Plataforma centralizada para la gestión de incidentes, requerimientos y activos tecnológicos institucionales.
+            </p>
+          </div>
+
+          <div className="mc-left-bottom">
+            <div className="mc-left-divider" />
+            <span className="mc-left-footer-label">Acceso restringido · Solo personal autorizado</span>
+            <span className="mc-left-footer-label">TLS 1.3 · Sesión cifrada</span>
+          </div>
+        </div>
+
+        {/* ── RIGHT: Form Panel ── */}
+        <main className="mc-right" role="main">
           <header className="mc-header">
-            <div className="mc-logo">
-              <div className="mc-logo-icon" aria-hidden="true">
-                <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
-                  <path
-                    d="M8.5 1.5L14 3.5V8c0 3.2-2.2 5.8-5.5 7C3.2 13.8 1 11.2 1 8V3.5l7.5-2Z"
-                    stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round"
-                  />
-                  <path d="M5.5 8.5l2 2 3.5-3.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <span className="mc-product">Mission Control</span>
-            </div>
-
-            <h1 className="mc-title">Acceso al sistema</h1>
-            <p className="mc-subtitle">Gestión de Servicios TI — Operaciones E-commerce</p>
-
-            <div className="mc-ssl" aria-label="Conexión segura TLS 1.3">
-              <span className="mc-ssl-dot" />
-              TLS 1.3 · SESIÓN CIFRADA
-            </div>
+            <p className="mc-eyebrow">Autenticación de acceso</p>
+            <h2 className="mc-title">Iniciar sesión</h2>
+            <p className="mc-subtitle">Ingrese sus credenciales institucionales</p>
           </header>
 
-          {/* ── Form ── */}
           <form
             className="mc-form"
             onSubmit={handleLogin}
@@ -685,17 +604,16 @@ function Login({ onLoginSuccess }) {
               aria-label={loading ? 'Autenticando, por favor espere' : 'Iniciar sesión'}
             >
               {loading && <span className="mc-spinner" aria-hidden="true" />}
-              {success ? '✓ ENLACE ESTABLECIDO' : loading ? 'AUTENTICANDO...' : 'INICIAR SESIÓN'}
+              {success ? '✓ SESIÓN INICIADA' : loading ? 'VERIFICANDO...' : 'INICIAR SESIÓN'}
             </button>
           </form>
 
-          {/* ── Footer ── */}
           <footer className="mc-footer">
             <p className="mc-footer-text">
               Acceso restringido.<br />
-              Solo personal autorizado.
+              Personal Administrativo y Académico.
             </p>
-            <a href="mailto:soporte@empresa.com" className="mc-footer-link">
+            <a href="mailto:soporte@utalca.cl" className="mc-footer-link">
               Contactar soporte →
             </a>
           </footer>

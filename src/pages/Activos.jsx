@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 
 /* ─────────────────────────────────────────────
-   TOAST, MODAL & SPINNER (Heredados del sistema base)
+   TOAST, MODAL & SPINNER
 ───────────────────────────────────────────── */
 function Toast({ toasts, removeToast }) {
   if (!toasts.length) return null;
@@ -10,24 +10,15 @@ function Toast({ toasts, removeToast }) {
     <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8, pointerEvents: 'none' }}>
       <style>{`@keyframes toastIn { from { opacity: 0; transform: translateX(10px) scale(0.98); } to { opacity: 1; transform: translateX(0) scale(1); } }`}</style>
       {toasts.map((t) => (
-        <div key={t.id} style={{
-          display: 'flex', alignItems: 'flex-start', gap: 10, padding: '11px 14px', background: 'var(--surface)',
-          border: `1px solid var(--border)`, borderLeft: `3px solid ${t.type === 'success' ? 'var(--success)' : 'var(--danger)'}`,
-          borderRadius: 7, boxShadow: 'var(--shadow-lg)', minWidth: 290, maxWidth: 370, pointerEvents: 'all', animation: 'toastIn 0.18s ease',
-        }}>
+        <div key={t.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '11px 14px', background: 'var(--surface)', border: `1px solid var(--border)`, borderLeft: `3px solid ${t.type === 'success' ? 'var(--success)' : 'var(--danger)'}`, borderRadius: 7, boxShadow: 'var(--shadow-lg)', minWidth: 290, maxWidth: 370, pointerEvents: 'all', animation: 'toastIn 0.18s ease' }}>
           <div style={{ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, marginTop: 1, background: t.type === 'success' ? 'var(--success-dim)' : 'var(--danger-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {t.type === 'success'
-              ? <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><polyline points="1,4.5 3.5,7 8,2" stroke="var(--success)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              : <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><line x1="2" y1="2" x2="7" y2="7" stroke="var(--danger)" strokeWidth="1.5" strokeLinecap="round"/><line x1="7" y1="2" x2="2" y2="7" stroke="var(--danger)" strokeWidth="1.5" strokeLinecap="round"/></svg>
-            }
+            {t.type === 'success' ? <span style={{color:'var(--success)', fontWeight:'bold'}}>✓</span> : <span style={{color:'var(--danger)', fontWeight:'bold'}}>!</span>}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.3 }}>{t.title}</p>
             {t.message && <p style={{ margin: '2px 0 0', fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.message}</p>}
           </div>
-          <button onClick={() => removeToast(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '1px 0 0 4px', lineHeight: 1, transition: 'color 0.1s' }}>
-            <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><line x1="1" y1="1" x2="10" y2="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-          </button>
+          <button onClick={() => removeToast(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '1px 0 0 4px', lineHeight: 1, transition: 'color 0.1s' }}>X</button>
         </div>
       ))}
     </div>
@@ -63,7 +54,7 @@ function Spinner() {
 }
 
 /* ─────────────────────────────────────────────
-   BADGE COMPONENTS (Adaptados para Activos)
+   BADGE COMPONENTS
 ───────────────────────────────────────────── */
 function AssetStatusBadge({ value }) {
   const s = {
@@ -73,10 +64,7 @@ function AssetStatusBadge({ value }) {
   }[value] || { bg: 'var(--surface-2)', color: 'var(--text-muted)', dot: 'var(--text-muted)' };
 
   return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 8px', borderRadius: 4,
-      background: s.bg, color: s.color, fontSize: 11, fontWeight: 500, fontFamily: 'var(--mono)', whiteSpace: 'nowrap',
-    }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 8px', borderRadius: 4, background: s.bg, color: s.color, fontSize: 11, fontWeight: 500, fontFamily: 'var(--mono)', whiteSpace: 'nowrap' }}>
       <span style={{ width: 5, height: 5, borderRadius: '50%', background: s.dot, flexShrink: 0 }} />
       {value}
     </span>
@@ -85,22 +73,13 @@ function AssetStatusBadge({ value }) {
 
 function CategoryBadge({ value }) {
   return (
-    <span style={{
-      display: 'inline-block', padding: '2px 7px', borderRadius: 4,
-      background: 'var(--surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border)',
-      fontSize: 10, fontWeight: 700, letterSpacing: '0.04em', fontFamily: 'var(--mono)', whiteSpace: 'nowrap',
-    }}>{value?.toUpperCase()}</span>
+    <span style={{ display: 'inline-block', padding: '2px 7px', borderRadius: 4, background: 'var(--surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border)', fontSize: 10, fontWeight: 700, letterSpacing: '0.04em', fontFamily: 'var(--mono)', whiteSpace: 'nowrap' }}>
+      {value?.toUpperCase()}
+    </span>
   );
 }
 
-/* ─────────────────────────────────────────────
-   FIELD HELPERS
-───────────────────────────────────────────── */
-const fieldBase = {
-  width: '100%', padding: '8px 11px', borderRadius: 6, border: '1px solid var(--border)',
-  fontSize: 13, color: 'var(--text-primary)', background: 'var(--surface-2)', fontFamily: 'var(--font)',
-  outline: 'none', transition: 'border-color 0.12s, box-shadow 0.12s, background 0.12s',
-};
+const fieldBase = { width: '100%', padding: '8px 11px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13, color: 'var(--text-primary)', background: 'var(--surface-2)', fontFamily: 'var(--font)', outline: 'none', transition: 'border-color 0.12s, box-shadow 0.12s, background 0.12s' };
 const onFocus = (e) => { e.target.style.borderColor = 'var(--accent)'; e.target.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.12)'; e.target.style.background = 'var(--surface)'; };
 const onBlur = (e) => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; e.target.style.background = 'var(--surface-2)'; };
 
@@ -116,7 +95,7 @@ function Activos() {
   const [hoveredRow, setHoveredRow] = useState(null);
 
   const [nuevoActivo, setNuevoActivo] = useState({
-    nombre: '', categoria: 'Servidor Cloud', estado: 'Operativo'
+    nombre: '', categoria: 'Software y Sistemas', estado: 'Operativo'
   });
 
   const addToast = useCallback((title, message, type = 'success') => {
@@ -151,10 +130,10 @@ function Activos() {
         estado: nuevoActivo.estado
       }]);
       if (error) throw error;
-      setNuevoActivo({ nombre: '', categoria: 'Servidor Cloud', estado: 'Operativo' });
+      setNuevoActivo({ nombre: '', categoria: 'Software y Sistemas', estado: 'Operativo' });
       setMostrarFormulario(false);
       obtenerActivos();
-      addToast('Activo registrado', `"${nuevoActivo.nombre}" agregado al inventario.`, 'success');
+      addToast('Activo registrado', `"${nuevoActivo.nombre}" agregado al inventario de UTalca.`, 'success');
     } catch (error) {
       console.error("Error al registrar activo:", error.message);
       addToast('Error al guardar', error.message, 'error');
@@ -169,7 +148,6 @@ function Activos() {
 
   return (
     <div style={{ padding: '28px 32px', width: '100%' }}>
-      {/* (Comparte los mismos estilos globales inyectados en Tickets.jsx. Omitimos la etiqueta <style> completa para no duplicar si ya cargan globalmente, pero los inyectamos aquí por seguridad) */}
       <style>{`
         .tk-toolbar { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
         .tk-title { font-size: 18px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; line-height: 1; margin-bottom: 5px; }
@@ -210,8 +188,8 @@ function Activos() {
 
       <div className="tk-toolbar">
         <div>
-          <h2 className="tk-title">Activos de TI (CMDB)</h2>
-          <p className="tk-subtitle">Inventario e infraestructura técnica del E-commerce</p>
+          <h2 className="tk-title">Inventario de TI (CMDB) - UTalca</h2>
+          <p className="tk-subtitle">Gestión de infraestructura, software y hardware universitario</p>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <button className="btn-ghost" onClick={obtenerActivos}>Actualizar</button>
@@ -241,7 +219,7 @@ function Activos() {
             <tr>
               <th style={{ width: 72 }}>ID</th>
               <th>Nombre del Activo</th>
-              <th style={{ width: 180 }}>Categoría</th>
+              <th style={{ width: 220 }}>Categoría</th>
               <th style={{ width: 140 }}>Estado</th>
             </tr>
           </thead>
@@ -251,7 +229,7 @@ function Activos() {
                   <tr key={i}>
                     <td><div className="sk" style={{ height: 11, width: 50 }} /></td>
                     <td><div className="sk" style={{ height: 13, width: '50%' }} /></td>
-                    <td><div className="sk" style={{ height: 20, width: 110 }} /></td>
+                    <td><div className="sk" style={{ height: 20, width: 140 }} /></td>
                     <td><div className="sk" style={{ height: 20, width: 90 }} /></td>
                   </tr>
                 ))
@@ -260,14 +238,8 @@ function Activos() {
                   <tr>
                     <td colSpan={4}>
                       <div className="empty-state">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 34, height: 34, marginBottom: 14, opacity: 0.35 }}>
-                           <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
-                           <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
-                           <line x1="6" y1="6" x2="6.01" y2="6" />
-                           <line x1="6" y1="18" x2="6.01" y2="18" />
-                        </svg>
                         <p className="empty-title">Inventario vacío</p>
-                        <p style={{ fontSize: 12.5 }}>No hay infraestructura registrada en la CMDB.</p>
+                        <p style={{ fontSize: 12.5 }}>No hay infraestructura registrada en la CMDB de la Universidad.</p>
                       </div>
                     </td>
                   </tr>
@@ -287,23 +259,24 @@ function Activos() {
 
       <Modal open={mostrarFormulario} onClose={() => !submitting && setMostrarFormulario(false)}>
         <div className="modal-header">
-          <h3 className="modal-title">Registrar Elemento de Configuración (CI)</h3>
+          <h3 className="modal-title">Registrar Activo Universitario</h3>
           <button className="modal-close" onClick={() => setMostrarFormulario(false)} disabled={submitting}>X</button>
         </div>
         <form onSubmit={crearActivoManual}>
           <div className="modal-body">
             <div>
-              <label className="form-label">Identificador / Nombre del Activo</label>
-              <input type="text" required style={fieldBase} value={nuevoActivo.nombre} onChange={(e) => setNuevoActivo({ ...nuevoActivo, nombre: e.target.value })} onFocus={onFocus} onBlur={onBlur} placeholder="Ej: AWS EC2 Prod-01" />
+              <label className="form-label">Nombre del Activo / Identificador</label>
+              <input type="text" required style={fieldBase} value={nuevoActivo.nombre} onChange={(e) => setNuevoActivo({ ...nuevoActivo, nombre: e.target.value })} onFocus={onFocus} onBlur={onBlur} placeholder="Ej: Laboratorio Info - PC 01" />
             </div>
             <div className="form-row">
               <div>
                 <label className="form-label">Categoría</label>
                 <select style={fieldBase} value={nuevoActivo.categoria} onChange={(e) => setNuevoActivo({ ...nuevoActivo, categoria: e.target.value })} onFocus={onFocus} onBlur={onBlur}>
-                  <option value="Servidor Cloud">Servidor Cloud</option>
-                  <option value="Licencia de Software">Licencia de Software</option>
-                  <option value="Hardware / Terminal">Hardware / Terminal</option>
-                  <option value="Infraestructura de Red">Infraestructura de Red</option>
+                  <option value="Software y Sistemas">Software y Sistemas (SAP, Educandus)</option>
+                  <option value="Equipos de Computación">Equipos de Computación (PC, Laptops)</option>
+                  <option value="Equipos Audiovisuales">Equipos Audiovisuales (Proyectores, TV)</option>
+                  <option value="Redes y Conectividad">Redes y Conectividad (WiFi, Internet)</option>
+                  <option value="Control de Asistencia">Control de Asistencia (Biométricos)</option>
                 </select>
               </div>
               <div>

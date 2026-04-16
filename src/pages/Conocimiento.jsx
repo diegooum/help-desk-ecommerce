@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 
-/* (Nuevamente, omito las funciones repetidas por brevedad. Asegúrate de copiarlas del primer bloque) */
-// ... COPIA Y PEGA AQUÍ LAS FUNCIONES Toast, Modal, Spinner, fieldBase, onFocus, onBlur DEL ARCHIVO ANTERIOR ...
+/* ─────────────────────────────────────────────
+   TOAST, MODAL & SPINNER
+───────────────────────────────────────────── */
 function Toast({ toasts, removeToast }) {
   if (!toasts.length) return null;
   return (
@@ -52,7 +53,7 @@ function Conocimiento() {
   const [toasts, setToasts] = useState([]);
   const [hoveredRow, setHoveredRow] = useState(null);
 
-  const [nuevoArticulo, setNuevoArticulo] = useState({ titulo: '', categoria: 'Soporte Técnico', contenido: '' });
+  const [nuevoArticulo, setNuevoArticulo] = useState({ titulo: '', categoria: 'Sistemas (SAP/Educandus)', contenido: '' });
 
   const addToast = useCallback((title, message, type = 'success') => {
     const id = Date.now(); setToasts((p) => [...p, { id, title, message, type }]); setTimeout(() => setToasts((p) => p.filter((t) => t.id !== id)), 4500);
@@ -75,7 +76,7 @@ function Conocimiento() {
     try {
       const { error } = await supabase.from('conocimiento').insert([{ titulo: nuevoArticulo.titulo, categoria: nuevoArticulo.categoria, contenido: nuevoArticulo.contenido }]);
       if (error) throw error;
-      setNuevoArticulo({ titulo: '', categoria: 'Soporte Técnico', contenido: '' });
+      setNuevoArticulo({ titulo: '', categoria: 'Sistemas (SAP/Educandus)', contenido: '' });
       setMostrarFormulario(false); obtenerArticulos();
       addToast('Artículo publicado', 'La documentación fue guardada en la Wiki.', 'success');
     } catch (error) { addToast('Error', error.message, 'error'); } finally { setSubmitting(false); }
@@ -83,13 +84,12 @@ function Conocimiento() {
 
   return (
     <div style={{ padding: '28px 32px', width: '100%' }}>
-      {/* CSS heredado */}
       <style>{`.tk-toolbar{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}.tk-title{font-size:18px;font-weight:700;color:var(--text-primary);letter-spacing:-.02em;line-height:1;margin-bottom:5px}.tk-subtitle{font-size:12px;color:var(--text-muted);letter-spacing:.01em}.btn-primary{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12.5px;font-weight:600;cursor:pointer;transition:background .12s,box-shadow .12s;font-family:var(--font);letter-spacing:.02em;white-space:nowrap}.btn-primary:hover{background:var(--accent-hover);box-shadow:0 2px 10px rgba(37,99,235,.35)}.btn-ghost{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;background:var(--surface);color:var(--text-secondary);border:1px solid var(--border);border-radius:6px;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .12s;font-family:var(--font);letter-spacing:.01em}.btn-ghost:hover{border-color:var(--border-strong);color:var(--text-primary);background:var(--surface-hover)}.btn-submit{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}.btn-submit:disabled{opacity:.55;cursor:not-allowed}.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;width:100%}.tk-table{width:100%;border-collapse:collapse;font-size:13px}.tk-table thead{background:var(--surface-2)}.tk-table th{padding:9px 16px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);white-space:nowrap}.tk-table td{padding:11px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);vertical-align:middle;line-height:1.4}.tk-row-hover td{background:var(--surface-hover)!important}.tk-id{font-family:var(--mono);font-size:11px;color:var(--text-muted)}.tk-title-cell{font-weight:500;color:var(--text-primary);font-size:13px}.tk-desc-cell{font-size:11.5px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:500px;margin-top:2px}.empty-state{display:flex;flex-direction:column;align-items:center;padding:60px 20px;color:var(--text-muted)}.empty-title{font-size:14px;font-weight:600;color:var(--text-secondary);margin-bottom:5px}.sk{background:linear-gradient(90deg,var(--surface-2) 25%,var(--border) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:sk 1.4s infinite;border-radius:4px}@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}.modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 15px;border-bottom:1px solid var(--border)}.modal-title{font-size:15px;font-weight:700;color:var(--text-primary);letter-spacing:-.01em}.modal-close{width:28px;height:28px;border-radius:6px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:background .1s}.modal-close:hover{background:var(--surface-hover);color:var(--text-primary)}.modal-body{padding:20px 22px;display:flex;flex-direction:column;gap:16px}.modal-footer{display:flex;gap:9px;justify-content:flex-end;padding:14px 22px;border-top:1px solid var(--border);background:var(--surface-2)}.form-label{display:block;margin-bottom:5px;font-size:11.5px;font-weight:600;color:var(--text-secondary);letter-spacing:.02em;text-transform:uppercase}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}`}</style>
 
       <div className="tk-toolbar">
         <div>
-          <h2 className="tk-title">Base de Conocimiento (Wiki)</h2>
-          <p className="tk-subtitle">Documentación técnica, manuales y resolución de problemas</p>
+          <h2 className="tk-title">Base de Conocimiento (Wiki UTalca)</h2>
+          <p className="tk-subtitle">Documentación técnica, manuales de sistemas y resolución de problemas</p>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <button className="btn-ghost" onClick={obtenerArticulos}>Actualizar</button>
@@ -145,18 +145,21 @@ function Conocimiento() {
             <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr' }}>
               <div>
                 <label className="form-label">Título del Artículo</label>
-                <input type="text" required style={fieldBase} value={nuevoArticulo.titulo} onChange={(e) => setNuevoArticulo({ ...nuevoArticulo, titulo: e.target.value })} onFocus={onFocus} onBlur={onBlur} />
+                <input type="text" required style={fieldBase} value={nuevoArticulo.titulo} onChange={(e) => setNuevoArticulo({ ...nuevoArticulo, titulo: e.target.value })} onFocus={onFocus} onBlur={onBlur} placeholder="Ej: Pasos para restablecer clave BUK" />
               </div>
               <div>
                 <label className="form-label">Categoría</label>
                 <select style={fieldBase} value={nuevoArticulo.categoria} onChange={(e) => setNuevoArticulo({ ...nuevoArticulo, categoria: e.target.value })} onFocus={onFocus} onBlur={onBlur}>
-                  <option value="Soporte Técnico">Soporte Técnico</option><option value="Políticas de E-commerce">Políticas</option><option value="Guías de Usuario">Guías</option><option value="Procedimientos de Emergencia">Emergencia</option>
+                  <option value="Sistemas (SAP/Educandus)">Sistemas (SAP/Educandus)</option>
+                  <option value="Soporte Técnico General">Soporte Técnico General</option>
+                  <option value="Guías Académicas">Guías Académicas</option>
+                  <option value="Procedimientos de Red">Procedimientos de Red</option>
                 </select>
               </div>
             </div>
             <div>
               <label className="form-label">Contenido (Procedimiento)</label>
-              <textarea required rows={8} style={{ ...fieldBase, resize: 'vertical', fontFamily: 'var(--mono)', fontSize: 12 }} value={nuevoArticulo.contenido} onChange={(e) => setNuevoArticulo({ ...nuevoArticulo, contenido: e.target.value })} onFocus={onFocus} onBlur={onBlur} placeholder="1. Paso uno..." />
+              <textarea required rows={8} style={{ ...fieldBase, resize: 'vertical', fontFamily: 'var(--mono)', fontSize: 12 }} value={nuevoArticulo.contenido} onChange={(e) => setNuevoArticulo({ ...nuevoArticulo, contenido: e.target.value })} onFocus={onFocus} onBlur={onBlur} placeholder="1. Ingrese al portal intranet..." />
             </div>
           </div>
           <div className="modal-footer">

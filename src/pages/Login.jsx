@@ -544,9 +544,8 @@ function Login({ onLoginSuccess }) {
 
           <div className="mc-left-center">
             <h1 className="mc-left-headline">
-              Gestión<br />
-              de Servicios<br />
-              <em>de TI</em>
+              Mesa de Servicios<br />
+              <em>Utalca</em>
             </h1>
             <p className="mc-left-desc">
               Plataforma centralizada para la gestión de incidentes, requerimientos y activos tecnológicos institucionales.

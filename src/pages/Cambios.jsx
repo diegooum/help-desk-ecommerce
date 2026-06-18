@@ -2,221 +2,324 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 
 /* ─────────────────────────────────────────────
-   TOAST, MODAL & SPINNER
+   COMPONENTES UI (Toast, Modal, Badges)
 ───────────────────────────────────────────── */
 function Toast({ toasts, removeToast }) {
   if (!toasts.length) return null;
   return (
     <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8, pointerEvents: 'none' }}>
-      <style>{`@keyframes toastIn { from { opacity: 0; transform: translateX(10px) scale(0.98); } to { opacity: 1; transform: translateX(0) scale(1); } }`}</style>
+      <style>{`@keyframes toastIn { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: translateX(0); } }`}</style>
       {toasts.map((t) => (
-        <div key={t.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '11px 14px', background: 'var(--surface)', border: `1px solid var(--border)`, borderLeft: `3px solid ${t.type === 'success' ? 'var(--success)' : 'var(--danger)'}`, borderRadius: 7, boxShadow: 'var(--shadow-lg)', minWidth: 290, maxWidth: 370, pointerEvents: 'all', animation: 'toastIn 0.18s ease' }}>
-          <div style={{ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, marginTop: 1, background: t.type === 'success' ? 'var(--success-dim)' : 'var(--danger-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {t.type === 'success' ? <span style={{color:'var(--success)', fontWeight:'bold'}}>✓</span> : <span style={{color:'var(--danger)', fontWeight:'bold'}}>!</span>}
+        <div key={t.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 16px', background: 'var(--surface)', border: `1px solid var(--border)`, borderLeft: `2px solid ${t.type === 'success' ? 'var(--success)' : 'var(--danger)'}`, borderRadius: 4, minWidth: 290, maxWidth: 370, pointerEvents: 'all', animation: 'toastIn 0.18s ease' }}>
+          <div style={{ width: 16, height: 16, borderRadius: '50%', flexShrink: 0, marginTop: 1, border: `1px solid ${t.type === 'success' ? 'var(--success)' : 'var(--danger)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {t.type === 'success' ? <span style={{color:'var(--success)', fontWeight:'bold', fontSize: 9}}>✓</span> : <span style={{color:'var(--danger)', fontWeight:'bold', fontSize: 9}}>!</span>}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.3 }}>{t.title}</p>
             {t.message && <p style={{ margin: '2px 0 0', fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.message}</p>}
           </div>
-          <button onClick={() => removeToast(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '1px 0 0 4px', lineHeight: 1, transition: 'color 0.1s' }}>X</button>
+          <button onClick={() => removeToast(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '1px 0 0 4px', lineHeight: 1, fontSize: 12 }}>×</button>
         </div>
       ))}
     </div>
   );
 }
-function Modal({ open, onClose, children }) {
-  useEffect(() => { const h = (e) => { if (e.key === 'Escape') onClose(); }; if (open) { document.addEventListener('keydown', h); document.body.style.overflow = 'hidden'; } return () => { document.removeEventListener('keydown', h); document.body.style.overflow = ''; }; }, [open, onClose]);
+
+function Modal({ open, onClose, children, maxWidth = 600 }) {
+  useEffect(() => {
+    const h = (e) => { if (e.key === 'Escape') onClose(); };
+    if (open) { document.addEventListener('keydown', h); document.body.style.overflow = 'hidden'; }
+    return () => { document.removeEventListener('keydown', h); document.body.style.overflow = ''; };
+  }, [open, onClose]);
+
   if (!open) return null;
-  return (<div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'var(--overlay)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, animation: 'overlayIn 0.15s ease' }}><style>{`@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } } @keyframes modalIn { from { opacity: 0; transform: scale(0.97) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }`}</style><div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, boxShadow: 'var(--shadow-modal)', width: '100%', maxWidth: 520, overflow: 'hidden', animation: 'modalIn 0.18s ease' }}>{children}</div></div>);
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, animation: 'overlayIn 0.12s ease' }}>
+      <style>{`@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } } @keyframes modalIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, width: '100%', maxWidth, overflow: 'hidden', animation: 'modalIn 0.18s ease', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+        {children}
+      </div>
+    </div>
+  );
 }
-function Spinner() { return (<svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ animation: 'spinIt 0.65s linear infinite', flexShrink: 0 }}><style>{`@keyframes spinIt { to { transform: rotate(360deg); } }`}</style><circle cx="6.5" cy="6.5" r="5" stroke="rgba(255,255,255,0.25)" strokeWidth="1.8"/><path d="M6.5 1.5a5 5 0 0 1 5 5" stroke="white" strokeWidth="1.8" strokeLinecap="round"/></svg>); }
-const fieldBase = { width: '100%', padding: '8px 11px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13, color: 'var(--text-primary)', background: 'var(--surface-2)', fontFamily: 'var(--font)', outline: 'none', transition: 'border-color 0.12s, box-shadow 0.12s, background 0.12s' };
-const onFocus = (e) => { e.target.style.borderColor = 'var(--accent)'; e.target.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.12)'; e.target.style.background = 'var(--surface)'; };
-const onBlur = (e) => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; e.target.style.background = 'var(--surface-2)'; };
 
+function LevelBadge({ value, type }) {
+  const isHigh = value === 'Alto';
+  const isLow = value === 'Bajo';
+  let color = 'var(--accent)';
+  if (isHigh) color = 'var(--danger)';
+  if (isLow) color = 'var(--success)';
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontFamily: 'var(--mono)' }}>
+      <span style={{ color: 'var(--text-muted)', width: 55 }}>{type}:</span>
+      <span style={{ color, fontWeight: 600 }}>{value}</span>
+    </div>
+  );
+}
+
+function StatusBadge({ value }) {
+  const s = { 
+    'Solicitado': { c: 'var(--warning)', b: 'var(--warning)' }, 
+    'Aprobado': { c: 'var(--info)', b: 'var(--info)' }, 
+    'Rechazado': { c: 'var(--danger)', b: 'var(--danger)' }, 
+    'Implementado': { c: 'var(--success)', b: 'var(--success)' } 
+  }[value] || { c: 'var(--text-muted)', b: 'var(--border)' };
+
+  return (
+    <span style={{ display: 'inline-block', padding: '3px 8px', border: `1px solid ${s.b}`, borderRadius: 3, color: s.c, fontSize: 9.5, fontWeight: 600, fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+      {value}
+    </span>
+  );
+}
+
+const fieldBase = { width: '100%', padding: '9px 12px', borderRadius: 4, border: '1px solid var(--border)', fontSize: 13, color: 'var(--text-primary)', background: 'var(--surface)', fontFamily: 'var(--font)', outline: 'none' };
 
 /* ─────────────────────────────────────────────
-   BADGES (Control de Cambios)
-───────────────────────────────────────────── */
-function RiskBadge({ value }) {
-  const s = {
-    'Bajo':    { bg: 'var(--surface-2)', color: 'var(--text-muted)' },
-    'Medio':   { bg: 'var(--accent-dim)', color: 'var(--accent)' },
-    'Alto':    { bg: 'var(--warning-dim)', color: 'var(--warning)' },
-    'Crítico': { bg: 'var(--danger-dim)', color: 'var(--danger)' },
-  }[value] || { bg: 'var(--surface-2)', color: 'var(--text-muted)' };
-
-  return (<span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 4, background: s.bg, color: s.color, fontSize: 11, fontWeight: 500, fontFamily: 'var(--mono)' }}>{value}</span>);
-}
-
-function ChangeStatusBadge({ value }) {
-  const s = {
-    'Pendiente': { bg: 'var(--warning-dim)', color: 'var(--warning)' },
-    'Aprobado':  { bg: 'var(--success-dim)', color: 'var(--success)' },
-    'Rechazado': { bg: 'var(--danger-dim)',  color: 'var(--danger)' },
-  }[value] || { bg: 'var(--surface-2)', color: 'var(--text-muted)' };
-
-  return (<span style={{ display: 'inline-block', padding: '2px 7px', borderRadius: 4, background: s.bg, color: s.color, border: `1px solid ${s.color}33`, fontSize: 10, fontWeight: 700, letterSpacing: '0.04em', fontFamily: 'var(--mono)', textTransform: 'uppercase' }}>{value}</span>);
-}
-
-/* ─────────────────────────────────────────────
-   MAIN COMPONENT: CAMBIOS
+   COMPONENTE PRINCIPAL
 ───────────────────────────────────────────── */
 function Cambios() {
+  const [currentUser, setCurrentUser] = useState(null);
   const [cambios, setCambios] = useState([]);
   const [loading, setLoading] = useState(true);
+  
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [toasts, setToasts] = useState([]);
-  const [hoveredRow, setHoveredRow] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
 
-  const [nuevoCambio, setNuevoCambio] = useState({ titulo: '', descripcion_impacto: '', nivel_riesgo: 'Bajo', fecha_ejecucion: '' });
+  const [nuevoCambio, setNuevoCambio] = useState({
+    titulo_cambio: '', desc_cambio: '', riesgo: 'Medio', impacto: 'Medio',
+    fecha_programada: '', ticket_relacionado: '', agente_responsable: ''
+  });
 
   const addToast = useCallback((title, message, type = 'success') => {
     const id = Date.now(); setToasts((p) => [...p, { id, title, message, type }]); setTimeout(() => setToasts((p) => p.filter((t) => t.id !== id)), 4500);
   }, []);
   const removeToast = useCallback((id) => setToasts((p) => p.filter((t) => t.id !== id)), []);
 
-  useEffect(() => { obtenerCambios(); }, []);
+  useEffect(() => { 
+    supabase.auth.getUser().then(({ data: { user } }) => setCurrentUser(user));
+    obtenerCambios(); 
+  }, []);
 
   const obtenerCambios = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.from('control_cambios').select('*').order('id', { ascending: false });
-      if (error) throw error; setCambios(data);
-    } catch (error) { console.error("Error obteniendo cambios:", error.message); } finally { setLoading(false); }
+      const { data, error } = await supabase.from('cambios').select('*').order('id_cambio', { ascending: false });
+      if (error) throw error;
+      setCambios(data);
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const crearCambioManual = async (e) => {
+  const crearCambio = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const { error } = await supabase.from('control_cambios').insert([{
-        titulo: nuevoCambio.titulo, descripcion_impacto: nuevoCambio.descripcion_impacto,
-        nivel_riesgo: nuevoCambio.nivel_riesgo, estado: 'Pendiente', fecha_ejecucion: nuevoCambio.fecha_ejecucion || null
+      const { error } = await supabase.from('cambios').insert([{ 
+        ...nuevoCambio, 
+        solicitante: currentUser?.email,
+        estado_cambio: 'Solicitado'
       }]);
+      
       if (error) throw error;
-      setNuevoCambio({ titulo: '', descripcion_impacto: '', nivel_riesgo: 'Bajo', fecha_ejecucion: '' });
-      setMostrarFormulario(false); obtenerCambios();
-      addToast('RFC Creado', 'La Solicitud de Cambio ha sido enviada al CAB de la Universidad.', 'success');
-    } catch (error) { addToast('Error de registro', error.message, 'error'); } finally { setSubmitting(false); }
+      
+      setNuevoCambio({ titulo_cambio: '', desc_cambio: '', riesgo: 'Medio', impacto: 'Medio', fecha_programada: '', ticket_relacionado: '', agente_responsable: '' });
+      setMostrarFormulario(false);
+      obtenerCambios();
+      addToast('RFC Creado', 'La solicitud de cambio ha sido registrada exitosamente.', 'success');
+    } catch (error) {
+      addToast('Error', error.message, 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const formatearFecha = (fechaISO) => {
-    if (!fechaISO) return 'No definida';
-    const f = new Date(fechaISO);
-    return f.toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
+  const actualizarEstadoCambio = async (id, nuevoEstado) => {
+    try {
+      const { error } = await supabase.from('cambios').update({ estado_cambio: nuevoEstado }).eq('id_cambio', id);
+      if (error) throw error;
+      obtenerCambios();
+      addToast('Flujo actualizado', `El cambio ahora está: ${nuevoEstado}`);
+    } catch (error) {
+      addToast('Error', error.message, 'error');
+    }
   };
+
+  const cambiosFiltrados = cambios.filter(c => 
+    c.titulo_cambio?.toLowerCase().includes(busqueda.toLowerCase()) || 
+    c.ticket_relacionado?.toLowerCase().includes(busqueda.toLowerCase()) ||
+    c.agente_responsable?.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   return (
-    <div style={{ padding: '28px 32px', width: '100%' }}>
-      <style>{`.tk-toolbar{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}.tk-title{font-size:18px;font-weight:700;color:var(--text-primary);letter-spacing:-.02em;line-height:1;margin-bottom:5px}.tk-subtitle{font-size:12px;color:var(--text-muted);letter-spacing:.01em}.btn-primary{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12.5px;font-weight:600;cursor:pointer;transition:background .12s,box-shadow .12s;font-family:var(--font);letter-spacing:.02em;white-space:nowrap}.btn-primary:hover{background:var(--accent-hover);box-shadow:0 2px 10px rgba(37,99,235,.35)}.btn-ghost{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;background:var(--surface);color:var(--text-secondary);border:1px solid var(--border);border-radius:6px;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .12s;font-family:var(--font);letter-spacing:.01em}.btn-ghost:hover{border-color:var(--border-strong);color:var(--text-primary);background:var(--surface-hover)}.btn-submit{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}.btn-submit:disabled{opacity:.55;cursor:not-allowed}.stats-bar{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px;background:var(--surface)}.stat-item{flex:1;padding:13px 18px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:3px}.stat-item:last-child{border-right:none}.stat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted)}.stat-value{font-size:20px;font-weight:700;color:var(--text-primary);font-family:var(--mono);letter-spacing:-.03em;line-height:1.1}.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;width:100%}.tk-table{width:100%;border-collapse:collapse;font-size:13px}.tk-table thead{background:var(--surface-2)}.tk-table th{padding:9px 16px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);white-space:nowrap}.tk-table td{padding:11px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);vertical-align:middle;line-height:1.4}.tk-row-hover td{background:var(--surface-hover)!important}.tk-id{font-family:var(--mono);font-size:11px;color:var(--text-muted)}.tk-title-cell{font-weight:500;color:var(--text-primary);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}.tk-desc-cell{font-size:11.5px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;margin-top:2px}.empty-state{display:flex;flex-direction:column;align-items:center;padding:60px 20px;color:var(--text-muted)}.empty-title{font-size:14px;font-weight:600;color:var(--text-secondary);margin-bottom:5px}.sk{background:linear-gradient(90deg,var(--surface-2) 25%,var(--border) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:sk 1.4s infinite;border-radius:4px}@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}.modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 15px;border-bottom:1px solid var(--border)}.modal-title{font-size:15px;font-weight:700;color:var(--text-primary);letter-spacing:-.01em}.modal-close{width:28px;height:28px;border-radius:6px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:background .1s}.modal-close:hover{background:var(--surface-hover);color:var(--text-primary)}.modal-body{padding:20px 22px;display:flex;flex-direction:column;gap:16px}.modal-footer{display:flex;gap:9px;justify-content:flex-end;padding:14px 22px;border-top:1px solid var(--border);background:var(--surface-2)}.form-label{display:block;margin-bottom:5px;font-size:11.5px;font-weight:600;color:var(--text-secondary);letter-spacing:.02em;text-transform:uppercase}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}`}</style>
+    <div style={{ padding: '36px 40px', width: '100%' }}>
+      <style>{`
+        .tk-toolbar { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+        .btn-primary { padding: 8px 18px; background: var(--text-primary); color: var(--surface); border: none; border-radius: 4px; font-size: 12px; font-weight: 500; cursor: pointer; transition: opacity 0.1s; }
+        .btn-primary:hover { opacity: 0.8; }
+        .btn-ghost { padding: 8px 16px; background: transparent; color: var(--text-secondary); border: 1px solid var(--border); border-radius: 4px; font-size: 12px; cursor: pointer; }
+        
+        .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+        .tk-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .tk-table th { padding: 12px 18px; text-align: left; font-size: 9px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); font-family: var(--mono); border-bottom: 1px solid var(--border); letter-spacing: 0.1em; }
+        .tk-table td { padding: 16px 18px; border-bottom: 1px solid var(--border); color: var(--text-secondary); vertical-align: top; }
+        
+        .form-label { display: block; margin-bottom: 6px; font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.12em; text-transform: uppercase; font-family: var(--mono); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .select-estado { background: var(--surface-2); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; font-size: 11px; color: var(--text-primary); outline: none; margin-top: 8px; cursor: pointer; }
+      `}</style>
 
+      {/* Toolbar */}
       <div className="tk-toolbar">
         <div>
-          <h2 className="tk-title">Control de Cambios (RFC) - UTalca</h2>
-          <p className="tk-subtitle">Gestión de despliegues en infraestructura y sistemas universitarios</p>
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Control de Cambios (RFC)</h2>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>Evaluación, aprobación e implementación en infraestructura</p>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn-ghost" onClick={obtenerCambios}>Actualizar</button>
-          <button className="btn-primary" onClick={() => setMostrarFormulario(true)}>Nueva Solicitud (RFC)</button>
+          <button className="btn-primary" onClick={() => setMostrarFormulario(true)}>Solicitar Cambio</button>
         </div>
       </div>
 
-      {!loading && (
-        <div className="stats-bar">
-          {[
-            { label: 'Total RFCs',   value: cambios.length  },
-            { label: 'Pendientes CAB', value: cambios.filter(c => c.estado === 'Pendiente').length },
-            { label: 'Aprobados',      value: cambios.filter(c => c.estado === 'Aprobado').length  },
-            { label: 'Rechazados',     value: cambios.filter(c => c.estado === 'Rechazado').length },
-          ].map(({ label, value }) => (
-            <div className="stat-item" key={label}>
-              <span className="stat-label">{label}</span>
-              <span className="stat-value">{value}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      <div style={{ marginBottom: 16 }}>
+        <input 
+          type="text" 
+          placeholder="Buscar por título, responsable o ID de ticket asociado..." 
+          style={{ ...fieldBase, maxWidth: 400 }} 
+          value={busqueda} 
+          onChange={(e) => setBusqueda(e.target.value)} 
+        />
+      </div>
 
+      {/* Tabla de Cambios */}
       <div className="table-wrap">
         <table className="tk-table">
           <thead>
             <tr>
-              <th style={{ width: 72 }}>RFC ID</th>
+              <th style={{ width: 80 }}>RFC ID</th>
               <th>Descripción del Cambio</th>
-              <th style={{ width: 110 }}>Riesgo</th>
-              <th style={{ width: 140 }}>Ejecución</th>
-              <th style={{ width: 120 }}>Aprobación</th>
+              <th style={{ width: 140 }}>Evaluación</th>
+              <th style={{ width: 160 }}>Programación</th>
+              <th style={{ width: 160 }}>Flujo de Trabajo</th>
             </tr>
           </thead>
           <tbody>
-            {loading ? Array.from({ length: 6 }).map((_, i) => (
-              <tr key={i}>
-                <td><div className="sk" style={{ height: 11, width: 50 }} /></td>
-                <td><div className="sk" style={{ height: 12, width: '65%', marginBottom: 5 }} /><div className="sk" style={{ height: 10, width: '45%' }} /></td>
-                <td><div className="sk" style={{ height: 20, width: 60 }} /></td>
-                <td><div className="sk" style={{ height: 12, width: 90 }} /></td>
-                <td><div className="sk" style={{ height: 20, width: 85 }} /></td>
-              </tr>
-            )) : cambios.length === 0 ? (
-              <tr>
-                <td colSpan={5}>
-                  <div className="empty-state">
-                    <p className="empty-title">Sin solicitudes pendientes</p>
+            {loading ? <tr><td colSpan="5" style={{ textAlign: 'center', padding: 40 }}>Cargando matriz de cambios...</td></tr> : 
+             cambiosFiltrados.length === 0 ? <tr><td colSpan="5" style={{ textAlign: 'center', padding: 40 }}>No hay controles de cambios registrados.</td></tr> :
+             cambiosFiltrados.map((c) => (
+              <tr key={c.id_cambio}>
+                <td>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>RFC-{String(c.id_cambio).padStart(4, '0')}</span>
+                </td>
+                <td>
+                  <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 14, marginBottom: 4 }}>{c.titulo_cambio}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, marginBottom: 8 }}>{c.desc_cambio}</div>
+                  {c.ticket_relacionado && (
+                    <span style={{ display: 'inline-block', fontSize: 10, padding: '2px 6px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 2, fontFamily: 'var(--mono)', color: 'var(--text-muted)' }}>
+                      Origen: Ticket #{c.ticket_relacionado}
+                    </span>
+                  )}
+                </td>
+                <td>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 2 }}>
+                    <LevelBadge type="Riesgo" value={c.riesgo} />
+                    <LevelBadge type="Impacto" value={c.impacto} />
                   </div>
                 </td>
-              </tr>
-            ) : cambios.map((cambio) => (
-              <tr key={cambio.id} className={hoveredRow === cambio.id ? 'tk-row-hover' : ''} onMouseEnter={() => setHoveredRow(cambio.id)} onMouseLeave={() => setHoveredRow(null)}>
-                <td><span className="tk-id">RFC-{String(cambio.id).padStart(4, '0')}</span></td>
                 <td>
-                  <p className="tk-title-cell">{cambio.titulo}</p>
-                  <p className="tk-desc-cell">{cambio.descripcion_impacto}</p>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Solicitado: {c.fecha_solicitud}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 500 }}>
+                    Ejecución: <span style={{ color: c.fecha_programada ? 'var(--info)' : 'var(--text-muted)' }}>{c.fecha_programada || 'Pendiente'}</span>
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 8 }}>Responsable:<br/><span style={{ color: 'var(--text-primary)' }}>{c.agente_responsable?.split('@')[0] || 'N/A'}</span></div>
                 </td>
-                <td><RiskBadge value={cambio.nivel_riesgo} /></td>
-                <td style={{ fontFamily: 'var(--mono)', fontSize: 11.5 }}>{formatearFecha(cambio.fecha_ejecucion)}</td>
-                <td><ChangeStatusBadge value={cambio.estado} /></td>
+                <td>
+                  <StatusBadge value={c.estado_cambio} />
+                  <br />
+                  <select 
+                    className="select-estado" 
+                    value={c.estado_cambio} 
+                    onChange={(e) => actualizarEstadoCambio(c.id_cambio, e.target.value)}
+                  >
+                    <option value="Solicitado">Solicitado</option>
+                    <option value="Aprobado">Aprobar Cambio</option>
+                    <option value="Implementado">Marcar Implementado</option>
+                    <option value="Rechazado">Rechazar</option>
+                  </select>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
+      {/* Modal Nuevo RFC */}
       <Modal open={mostrarFormulario} onClose={() => !submitting && setMostrarFormulario(false)}>
-        <div className="modal-header">
-          <h3 className="modal-title">Registrar Solicitud de Cambio (RFC)</h3>
-          <button className="modal-close" onClick={() => setMostrarFormulario(false)} disabled={submitting}>X</button>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 600 }}>Nueva Solicitud de Cambio (RFC)</h3>
+          <button onClick={() => setMostrarFormulario(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>×</button>
         </div>
-        <form onSubmit={crearCambioManual}>
-          <div className="modal-body">
+        <form onSubmit={crearCambio}>
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto' }}>
+            
             <div>
               <label className="form-label">Título del Cambio</label>
-              <input type="text" required style={fieldBase} value={nuevoCambio.titulo} onChange={(e) => setNuevoCambio({ ...nuevoCambio, titulo: e.target.value })} onFocus={onFocus} onBlur={onBlur} placeholder="Ej: Actualización de versión Educandus" />
+              <input type="text" required style={fieldBase} value={nuevoCambio.titulo_cambio} onChange={e => setNuevoCambio({...nuevoCambio, titulo_cambio: e.target.value})} placeholder="Ej: Actualización RAM Servidor SAP" />
             </div>
+
             <div>
-              <label className="form-label">Análisis de Impacto en Servicios UTalca</label>
-              <textarea required rows={2} style={{ ...fieldBase, resize: 'vertical' }} value={nuevoCambio.descripcion_impacto} onChange={(e) => setNuevoCambio({ ...nuevoCambio, descripcion_impacto: e.target.value })} onFocus={onFocus} onBlur={onBlur} />
+              <label className="form-label">Justificación y Plan de Acción</label>
+              <textarea required rows={3} style={{...fieldBase, resize: 'vertical'}} value={nuevoCambio.desc_cambio} onChange={e => setNuevoCambio({...nuevoCambio, desc_cambio: e.target.value})} placeholder="Motivo del cambio, pasos a seguir, plan de rollback si falla..." />
             </div>
+
             <div className="form-row">
               <div>
                 <label className="form-label">Nivel de Riesgo</label>
-                <select style={fieldBase} value={nuevoCambio.nivel_riesgo} onChange={(e) => setNuevoCambio({ ...nuevoCambio, nivel_riesgo: e.target.value })} onFocus={onFocus} onBlur={onBlur}>
-                  <option value="Bajo">Bajo</option><option value="Medio">Medio</option><option value="Alto">Alto</option><option value="Crítico">Crítico</option>
+                <select required style={fieldBase} value={nuevoCambio.riesgo} onChange={e => setNuevoCambio({...nuevoCambio, riesgo: e.target.value})}>
+                  <option value="Bajo">Bajo (Cambio estándar)</option>
+                  <option value="Medio">Medio (Requiere ventana de mtto)</option>
+                  <option value="Alto">Alto (Crítico para el negocio)</option>
                 </select>
               </div>
               <div>
-                <label className="form-label">Ventana de Ejecución</label>
-                <input type="datetime-local" required style={fieldBase} value={nuevoCambio.fecha_ejecucion} onChange={(e) => setNuevoCambio({ ...nuevoCambio, fecha_ejecucion: e.target.value })} onFocus={onFocus} onBlur={onBlur} />
+                <label className="form-label">Nivel de Impacto</label>
+                <select required style={fieldBase} value={nuevoCambio.impacto} onChange={e => setNuevoCambio({...nuevoCambio, impacto: e.target.value})}>
+                  <option value="Bajo">Bajo (1 a 5 usuarios)</option>
+                  <option value="Medio">Medio (Un departamento)</option>
+                  <option value="Alto">Alto (Toda la universidad)</option>
+                </select>
               </div>
             </div>
+
+            <div className="form-row">
+              <div>
+                <label className="form-label">Fecha Programada (Ventana)</label>
+                <input type="date" required style={fieldBase} value={nuevoCambio.fecha_programada} onChange={e => setNuevoCambio({...nuevoCambio, fecha_programada: e.target.value})} />
+              </div>
+              <div>
+                <label className="form-label">Ticket Origen (Opcional)</label>
+                <input type="text" style={fieldBase} value={nuevoCambio.ticket_relacionado} onChange={e => setNuevoCambio({...nuevoCambio, ticket_relacionado: e.target.value})} placeholder="Ej: 0045" />
+              </div>
+            </div>
+
+            <div>
+              <label className="form-label">Agente Responsable de Ejecución</label>
+              <input type="email" required style={fieldBase} value={nuevoCambio.agente_responsable} onChange={e => setNuevoCambio({...nuevoCambio, agente_responsable: e.target.value})} placeholder="correo@utalca.cl" />
+            </div>
+
           </div>
-          <div className="modal-footer">
-            <button type="button" className="btn-ghost" onClick={() => setMostrarFormulario(false)} disabled={submitting}>Cancelar</button>
-            <button type="submit" className="btn-submit" disabled={submitting}>{submitting ? <><Spinner /> Enviando...</> : 'Enviar a CAB'}</button>
+          <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border)', background: 'var(--surface-2)', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <button type="button" className="btn-ghost" onClick={() => setMostrarFormulario(false)}>Cancelar</button>
+            <button type="submit" className="btn-primary" disabled={submitting}>{submitting ? 'Registrando...' : 'Registrar RFC'}</button>
           </div>
         </form>
       </Modal>
+
       <Toast toasts={toasts} removeToast={removeToast} />
     </div>
   );

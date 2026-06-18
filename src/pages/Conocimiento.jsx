@@ -11,6 +11,17 @@ const CATALOGO_SERVICIOS = [
 ];
 
 /* ─────────────────────────────────────────────
+   LISTA OFICIAL DE AGENTES (RBAC)
+───────────────────────────────────────────── */
+const EMAILS_AGENTES = [
+  'soporte.ti@utalca.cl',
+  'csoledad@utalca.cl',
+  'mvelis@utalca.cl',
+  'mcastro@utalca.cl',
+  'lbarra@utalca.cl'
+];
+
+/* ─────────────────────────────────────────────
    TOAST Y MODAL
 ───────────────────────────────────────────── */
 function Toast({ toasts, removeToast }) {
@@ -83,6 +94,9 @@ function Conocimiento() {
     obtenerArticulos(); 
   }, []);
 
+  // VERIFICADOR DE ROL
+  const esAgente = EMAILS_AGENTES.includes(currentUser?.email);
+
   const obtenerArticulos = async () => {
     try {
       setLoading(true);
@@ -136,11 +150,12 @@ function Conocimiento() {
     }
   };
 
-  // Filtrado de artículos
-  const articulosFiltrados = articulos.filter(a => 
-    a.titulo_articulo?.toLowerCase().includes(busqueda.toLowerCase()) || 
-    a.servicio_relacionado?.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  // Filtrado de artículos (Oculta los desactivados si no eres agente)
+  const articulosFiltrados = articulos.filter(a => {
+    const coincideBusqueda = a.titulo_articulo?.toLowerCase().includes(busqueda.toLowerCase()) || a.servicio_relacionado?.toLowerCase().includes(busqueda.toLowerCase());
+    const permisoVisible = esAgente || a.estado_publicacion === 'Publicado'; // Si no es agente, solo ve los publicados
+    return coincideBusqueda && permisoVisible;
+  });
 
   return (
     <div style={{ padding: '36px 40px', width: '100%' }}>
@@ -171,7 +186,10 @@ function Conocimiento() {
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn-ghost" onClick={obtenerArticulos}>Actualizar</button>
-          <button className="btn-primary" onClick={() => setMostrarFormulario(true)}>Nuevo Artículo</button>
+          {/* AQUÍ ESTÁ LA MAGIA: Solo Agentes ven el botón */}
+          {esAgente && (
+            <button className="btn-primary" onClick={() => setMostrarFormulario(true)}>Nuevo Artículo</button>
+          )}
         </div>
       </div>
 
@@ -190,7 +208,7 @@ function Conocimiento() {
         <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Cargando base de conocimientos...</div>
       ) : articulosFiltrados.length === 0 ? (
         <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, border: '1px dashed var(--border)', borderRadius: 4 }}>
-          No se encontraron artículos. Intenta crear uno nuevo.
+          No se encontraron artículos publicados.
         </div>
       ) : (
         <div className="articulos-grid">
@@ -237,20 +255,26 @@ function Conocimiento() {
             </div>
 
             <div style={{ padding: '16px 32px', borderTop: '1px solid var(--border)', background: 'var(--surface-2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <button 
-                className="btn-ghost" 
-                style={{ color: articuloLectura.estado_publicacion === 'Publicado' ? 'var(--danger)' : 'var(--success)', borderColor: 'transparent' }}
-                onClick={() => cambiarEstadoPublicacion(articuloLectura.id_articulo, articuloLectura.estado_publicacion)}
-              >
-                {articuloLectura.estado_publicacion === 'Publicado' ? 'Desactivar Artículo' : 'Volver a Publicar'}
-              </button>
+              {/* MAGIA 2: Botón de activar/desactivar solo para Agentes */}
+              {esAgente ? (
+                <button 
+                  className="btn-ghost" 
+                  style={{ color: articuloLectura.estado_publicacion === 'Publicado' ? 'var(--danger)' : 'var(--success)', borderColor: 'transparent' }}
+                  onClick={() => cambiarEstadoPublicacion(articuloLectura.id_articulo, articuloLectura.estado_publicacion)}
+                >
+                  {articuloLectura.estado_publicacion === 'Publicado' ? 'Desactivar Artículo' : 'Volver a Publicar'}
+                </button>
+              ) : (
+                <div /> /* Espaciador para mantener el botón Cerrar a la derecha */
+              )}
+              
               <button className="btn-primary" onClick={() => setArticuloLectura(null)}>Cerrar</button>
             </div>
           </>
         )}
       </Modal>
 
-      {/* Modal Nuevo Artículo */}
+      {/* Modal Nuevo Artículo (Solo se abrirá si es Agente, porque el botón está protegido) */}
       <Modal open={mostrarFormulario} onClose={() => !submitting && setMostrarFormulario(false)} maxWidth={600}>
         <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
           <h3 style={{ fontSize: 15, fontWeight: 600 }}>Redactar Nuevo Artículo</h3>

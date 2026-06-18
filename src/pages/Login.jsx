@@ -537,16 +537,19 @@ function Login({ onLoginSuccess }) {
 
         {/* ── LEFT: Editorial Statement ── */}
         <div className="mc-left" aria-hidden="true">
-          <div className="mc-left-top">
-            <span className="mc-left-tag">Service Desk</span>
-            <span className="mc-left-brand">Universidad de Talca</span>
+          <div className="mc-left-top" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
+            <img
+              src="/corporativo_web1.png"
+              alt="Logo Corporativo Universidad de Talca"
+              style={{ maxWidth: '350px', width: '100%', height: 'auto', display: 'block' }}
+            />
           </div>
+    
 
           <div className="mc-left-center">
             <h1 className="mc-left-headline">
-              Gestión<br />
-              de Servicios<br />
-              <em>de TI</em>
+              Mesa de Servicios<br />
+              <em>Utalca</em>
             </h1>
             <p className="mc-left-desc">
               Plataforma centralizada para la gestión de incidentes, requerimientos y activos tecnológicos institucionales.

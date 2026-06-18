@@ -2,172 +2,288 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 
 /* ─────────────────────────────────────────────
-   TOAST, MODAL & SPINNER
+   CATÁLOGO DE SERVICIOS (Igual que en Tickets)
+───────────────────────────────────────────── */
+const CATALOGO_SERVICIOS = [
+  "SAP", "Educandus", "Sistema de Biblioteca", "BUK RRHH",
+  "Microsoft 365", "Computadoras", "Impresoras", "Proyectores",
+  "Televisores", "Access Point (WiFi)", "Biométricos", "Internet"
+];
+
+/* ─────────────────────────────────────────────
+   TOAST Y MODAL
 ───────────────────────────────────────────── */
 function Toast({ toasts, removeToast }) {
   if (!toasts.length) return null;
   return (
     <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8, pointerEvents: 'none' }}>
-      <style>{`@keyframes toastIn { from { opacity: 0; transform: translateX(10px) scale(0.98); } to { opacity: 1; transform: translateX(0) scale(1); } }`}</style>
+      <style>{`@keyframes toastIn { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: translateX(0); } }`}</style>
       {toasts.map((t) => (
-        <div key={t.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '11px 14px', background: 'var(--surface)', border: `1px solid var(--border)`, borderLeft: `3px solid ${t.type === 'success' ? 'var(--success)' : 'var(--danger)'}`, borderRadius: 7, boxShadow: 'var(--shadow-lg)', minWidth: 290, maxWidth: 370, pointerEvents: 'all', animation: 'toastIn 0.18s ease' }}>
-          <div style={{ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, marginTop: 1, background: t.type === 'success' ? 'var(--success-dim)' : 'var(--danger-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {t.type === 'success' ? <span style={{color:'var(--success)', fontWeight:'bold'}}>✓</span> : <span style={{color:'var(--danger)', fontWeight:'bold'}}>!</span>}
+        <div key={t.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 16px', background: 'var(--surface)', border: `1px solid var(--border)`, borderLeft: `2px solid ${t.type === 'success' ? 'var(--success)' : 'var(--danger)'}`, borderRadius: 4, minWidth: 290, maxWidth: 370, pointerEvents: 'all', animation: 'toastIn 0.18s ease' }}>
+          <div style={{ width: 16, height: 16, borderRadius: '50%', flexShrink: 0, marginTop: 1, border: `1px solid ${t.type === 'success' ? 'var(--success)' : 'var(--danger)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {t.type === 'success' ? <span style={{color:'var(--success)', fontWeight:'bold', fontSize: 9}}>✓</span> : <span style={{color:'var(--danger)', fontWeight:'bold', fontSize: 9}}>!</span>}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.3 }}>{t.title}</p>
             {t.message && <p style={{ margin: '2px 0 0', fontSize: 11.5, color: 'var(--text-muted)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.message}</p>}
           </div>
-          <button onClick={() => removeToast(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '1px 0 0 4px', lineHeight: 1, transition: 'color 0.1s' }}>X</button>
+          <button onClick={() => removeToast(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '1px 0 0 4px', lineHeight: 1, fontSize: 12 }}>×</button>
         </div>
       ))}
     </div>
   );
 }
-function Modal({ open, onClose, children }) {
-  useEffect(() => { const h = (e) => { if (e.key === 'Escape') onClose(); }; if (open) { document.addEventListener('keydown', h); document.body.style.overflow = 'hidden'; } return () => { document.removeEventListener('keydown', h); document.body.style.overflow = ''; }; }, [open, onClose]);
+
+function Modal({ open, onClose, children, maxWidth = 560 }) {
+  useEffect(() => {
+    const h = (e) => { if (e.key === 'Escape') onClose(); };
+    if (open) { document.addEventListener('keydown', h); document.body.style.overflow = 'hidden'; }
+    return () => { document.removeEventListener('keydown', h); document.body.style.overflow = ''; };
+  }, [open, onClose]);
+
   if (!open) return null;
-  return (<div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'var(--overlay)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, animation: 'overlayIn 0.15s ease' }}><style>{`@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } } @keyframes modalIn { from { opacity: 0; transform: scale(0.97) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }`}</style><div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, boxShadow: 'var(--shadow-modal)', width: '100%', maxWidth: 720, overflow: 'hidden', animation: 'modalIn 0.18s ease' }}>{children}</div></div>);
-}
-function Spinner() { return (<svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ animation: 'spinIt 0.65s linear infinite', flexShrink: 0 }}><style>{`@keyframes spinIt { to { transform: rotate(360deg); } }`}</style><circle cx="6.5" cy="6.5" r="5" stroke="rgba(255,255,255,0.25)" strokeWidth="1.8"/><path d="M6.5 1.5a5 5 0 0 1 5 5" stroke="white" strokeWidth="1.8" strokeLinecap="round"/></svg>); }
-const fieldBase = { width: '100%', padding: '8px 11px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13, color: 'var(--text-primary)', background: 'var(--surface-2)', fontFamily: 'var(--font)', outline: 'none', transition: 'border-color 0.12s, box-shadow 0.12s, background 0.12s' };
-const onFocus = (e) => { e.target.style.borderColor = 'var(--accent)'; e.target.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.12)'; e.target.style.background = 'var(--surface)'; };
-const onBlur = (e) => { e.target.style.borderColor = 'var(--border)'; e.target.style.boxShadow = 'none'; e.target.style.background = 'var(--surface-2)'; };
-
-
-/* ─────────────────────────────────────────────
-   BADGES (Conocimiento)
-───────────────────────────────────────────── */
-function DocCategoryBadge({ value }) {
-  return (<span style={{ display: 'inline-block', padding: '2px 7px', borderRadius: 4, background: '#ede9fe', color: '#6d28d9', fontSize: 10, fontWeight: 700, letterSpacing: '0.04em', fontFamily: 'var(--mono)', textTransform: 'uppercase' }}>{value}</span>);
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'var(--overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, animation: 'overlayIn 0.12s ease' }}>
+      <style>{`@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } } @keyframes modalIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 6, width: '100%', maxWidth, overflow: 'hidden', animation: 'modalIn 0.18s ease', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+        {children}
+      </div>
+    </div>
+  );
 }
 
+const fieldBase = { width: '100%', padding: '9px 12px', borderRadius: 4, border: '1px solid var(--border)', fontSize: 13, color: 'var(--text-primary)', background: 'var(--surface)', fontFamily: 'var(--font)', outline: 'none' };
+
 /* ─────────────────────────────────────────────
-   MAIN COMPONENT: CONOCIMIENTO
+   COMPONENTE PRINCIPAL
 ───────────────────────────────────────────── */
 function Conocimiento() {
+  const [currentUser, setCurrentUser] = useState(null);
   const [articulos, setArticulos] = useState([]);
   const [loading, setLoading] = useState(true);
+  
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [articuloLectura, setArticuloLectura] = useState(null);
+  
   const [submitting, setSubmitting] = useState(false);
   const [toasts, setToasts] = useState([]);
-  const [hoveredRow, setHoveredRow] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
 
-  const [nuevoArticulo, setNuevoArticulo] = useState({ titulo: '', categoria: 'Sistemas (SAP/Educandus)', contenido: '' });
+  const [nuevoArticulo, setNuevoArticulo] = useState({
+    titulo_articulo: '', conten_articulo: '', servicio_relacionado: CATALOGO_SERVICIOS[0]
+  });
 
   const addToast = useCallback((title, message, type = 'success') => {
     const id = Date.now(); setToasts((p) => [...p, { id, title, message, type }]); setTimeout(() => setToasts((p) => p.filter((t) => t.id !== id)), 4500);
   }, []);
   const removeToast = useCallback((id) => setToasts((p) => p.filter((t) => t.id !== id)), []);
 
-  useEffect(() => { obtenerArticulos(); }, []);
+  useEffect(() => { 
+    supabase.auth.getUser().then(({ data: { user } }) => setCurrentUser(user));
+    obtenerArticulos(); 
+  }, []);
 
   const obtenerArticulos = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.from('conocimiento').select('*').order('id', { ascending: false });
-      if (error) throw error; setArticulos(data);
-    } catch (error) { console.error("Error obteniendo base de conocimiento:", error.message); } finally { setLoading(false); }
+      const { data, error } = await supabase.from('articulos').select('*').order('fecha_articulo', { ascending: false });
+      if (error) throw error;
+      setArticulos(data);
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const crearArticuloManual = async (e) => {
+  const crearArticulo = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const { error } = await supabase.from('conocimiento').insert([{ titulo: nuevoArticulo.titulo, categoria: nuevoArticulo.categoria, contenido: nuevoArticulo.contenido }]);
+      const { error } = await supabase.from('articulos').insert([{ 
+        ...nuevoArticulo, 
+        autor_articulo: currentUser?.email || 'usuario@utalca.cl',
+        estado_publicacion: 'Publicado'
+      }]);
+      
       if (error) throw error;
-      setNuevoArticulo({ titulo: '', categoria: 'Sistemas (SAP/Educandus)', contenido: '' });
-      setMostrarFormulario(false); obtenerArticulos();
-      addToast('Artículo publicado', 'La documentación fue guardada en la Wiki.', 'success');
-    } catch (error) { addToast('Error', error.message, 'error'); } finally { setSubmitting(false); }
+      
+      setNuevoArticulo({ titulo_articulo: '', conten_articulo: '', servicio_relacionado: CATALOGO_SERVICIOS[0] });
+      setMostrarFormulario(false);
+      obtenerArticulos();
+      addToast('Artículo publicado', 'El documento ya está disponible en la base de conocimientos.', 'success');
+    } catch (error) {
+      addToast('Error al publicar', error.message, 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  return (
-    <div style={{ padding: '28px 32px', width: '100%' }}>
-      <style>{`.tk-toolbar{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}.tk-title{font-size:18px;font-weight:700;color:var(--text-primary);letter-spacing:-.02em;line-height:1;margin-bottom:5px}.tk-subtitle{font-size:12px;color:var(--text-muted);letter-spacing:.01em}.btn-primary{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:12.5px;font-weight:600;cursor:pointer;transition:background .12s,box-shadow .12s;font-family:var(--font);letter-spacing:.02em;white-space:nowrap}.btn-primary:hover{background:var(--accent-hover);box-shadow:0 2px 10px rgba(37,99,235,.35)}.btn-ghost{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;background:var(--surface);color:var(--text-secondary);border:1px solid var(--border);border-radius:6px;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .12s;font-family:var(--font);letter-spacing:.01em}.btn-ghost:hover{border-color:var(--border-strong);color:var(--text-primary);background:var(--surface-hover)}.btn-submit{display:inline-flex;align-items:center;gap:7px;padding:8px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}.btn-submit:disabled{opacity:.55;cursor:not-allowed}.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;width:100%}.tk-table{width:100%;border-collapse:collapse;font-size:13px}.tk-table thead{background:var(--surface-2)}.tk-table th{padding:9px 16px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid var(--border);white-space:nowrap}.tk-table td{padding:11px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary);vertical-align:middle;line-height:1.4}.tk-row-hover td{background:var(--surface-hover)!important}.tk-id{font-family:var(--mono);font-size:11px;color:var(--text-muted)}.tk-title-cell{font-weight:500;color:var(--text-primary);font-size:13px}.tk-desc-cell{font-size:11.5px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:500px;margin-top:2px}.empty-state{display:flex;flex-direction:column;align-items:center;padding:60px 20px;color:var(--text-muted)}.empty-title{font-size:14px;font-weight:600;color:var(--text-secondary);margin-bottom:5px}.sk{background:linear-gradient(90deg,var(--surface-2) 25%,var(--border) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:sk 1.4s infinite;border-radius:4px}@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}.modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 15px;border-bottom:1px solid var(--border)}.modal-title{font-size:15px;font-weight:700;color:var(--text-primary);letter-spacing:-.01em}.modal-close{width:28px;height:28px;border-radius:6px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:background .1s}.modal-close:hover{background:var(--surface-hover);color:var(--text-primary)}.modal-body{padding:20px 22px;display:flex;flex-direction:column;gap:16px}.modal-footer{display:flex;gap:9px;justify-content:flex-end;padding:14px 22px;border-top:1px solid var(--border);background:var(--surface-2)}.form-label{display:block;margin-bottom:5px;font-size:11.5px;font-weight:600;color:var(--text-secondary);letter-spacing:.02em;text-transform:uppercase}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}`}</style>
+  const cambiarEstadoPublicacion = async (id, estadoActual) => {
+    const nuevoEstado = estadoActual === 'Publicado' ? 'Desactivado' : 'Publicado';
+    try {
+      const { error } = await supabase.from('articulos').update({ estado_publicacion: nuevoEstado }).eq('id_articulo', id);
+      if (error) throw error;
+      
+      if (articuloLectura && articuloLectura.id_articulo === id) {
+        setArticuloLectura({ ...articuloLectura, estado_publicacion: nuevoEstado });
+      }
+      
+      obtenerArticulos();
+      addToast('Estado actualizado', `El artículo ahora está ${nuevoEstado}.`);
+    } catch (error) {
+      addToast('Error', error.message, 'error');
+    }
+  };
 
+  // Filtrado de artículos
+  const articulosFiltrados = articulos.filter(a => 
+    a.titulo_articulo?.toLowerCase().includes(busqueda.toLowerCase()) || 
+    a.servicio_relacionado?.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
+  return (
+    <div style={{ padding: '36px 40px', width: '100%' }}>
+      <style>{`
+        .tk-toolbar { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+        .btn-primary { padding: 8px 18px; background: var(--text-primary); color: var(--surface); border: none; border-radius: 4px; font-size: 12px; font-weight: 500; cursor: pointer; transition: opacity 0.1s; }
+        .btn-primary:hover { opacity: 0.8; }
+        .btn-ghost { padding: 8px 16px; background: transparent; color: var(--text-secondary); border: 1px solid var(--border); border-radius: 4px; font-size: 12px; cursor: pointer; }
+        
+        .articulos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+        .articulo-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 20px; cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; }
+        .articulo-card:hover { border-color: var(--border-strong); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .articulo-card.disabled { opacity: 0.6; background: var(--surface-2); }
+        
+        .art-tag { display: inline-block; padding: 2px 8px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 2px; font-size: 9px; font-weight: 600; font-family: var(--mono); text-transform: uppercase; color: var(--text-secondary); margin-bottom: 12px; }
+        .art-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 0 0 8px 0; line-height: 1.3; }
+        .art-excerpt { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin: 0 0 16px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .art-footer { margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid var(--border); padding-top: 12px; }
+        
+        .form-label { display: block; margin-bottom: 6px; font-size: 10px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.12em; text-transform: uppercase; font-family: var(--mono); }
+      `}</style>
+
+      {/* Toolbar */}
       <div className="tk-toolbar">
         <div>
-          <h2 className="tk-title">Base de Conocimiento (Wiki UTalca)</h2>
-          <p className="tk-subtitle">Documentación técnica, manuales de sistemas y resolución de problemas</p>
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-primary)' }}>Base de Conocimientos</h2>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>Guías de resolución y documentación de servicios</p>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn-ghost" onClick={obtenerArticulos}>Actualizar</button>
-          <button className="btn-primary" onClick={() => setMostrarFormulario(true)}>Redactar Artículo</button>
+          <button className="btn-primary" onClick={() => setMostrarFormulario(true)}>Nuevo Artículo</button>
         </div>
       </div>
 
-      <div className="table-wrap">
-        <table className="tk-table">
-          <thead>
-            <tr>
-              <th style={{ width: 72 }}>DOC ID</th>
-              <th>Artículo</th>
-              <th style={{ width: 180 }}>Clasificación</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? Array.from({ length: 6 }).map((_, i) => (
-              <tr key={i}>
-                <td><div className="sk" style={{ height: 11, width: 50 }} /></td>
-                <td><div className="sk" style={{ height: 12, width: '65%', marginBottom: 5 }} /><div className="sk" style={{ height: 10, width: '45%' }} /></td>
-                <td><div className="sk" style={{ height: 20, width: 120 }} /></td>
-              </tr>
-            )) : articulos.length === 0 ? (
-              <tr>
-                <td colSpan={3}>
-                  <div className="empty-state">
-                    <p className="empty-title">Wiki vacía</p>
-                  </div>
-                </td>
-              </tr>
-            ) : articulos.map((articulo) => (
-              <tr key={articulo.id} className={hoveredRow === articulo.id ? 'tk-row-hover' : ''} onMouseEnter={() => setHoveredRow(articulo.id)} onMouseLeave={() => setHoveredRow(null)}>
-                <td><span className="tk-id">KB-{String(articulo.id).padStart(4, '0')}</span></td>
-                <td>
-                  <p className="tk-title-cell">{articulo.titulo}</p>
-                  <p className="tk-desc-cell">{articulo.contenido.substring(0, 90)}...</p>
-                </td>
-                <td><DocCategoryBadge value={articulo.categoria} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div style={{ marginBottom: 24 }}>
+        <input 
+          type="text" 
+          placeholder="Buscar soluciones por título o servicio..." 
+          style={{ ...fieldBase, maxWidth: 400 }} 
+          value={busqueda} 
+          onChange={(e) => setBusqueda(e.target.value)} 
+        />
       </div>
 
-      <Modal open={mostrarFormulario} onClose={() => !submitting && setMostrarFormulario(false)}>
-        <div className="modal-header">
-          <h3 className="modal-title">Redactar nuevo artículo</h3>
-          <button className="modal-close" onClick={() => setMostrarFormulario(false)} disabled={submitting}>X</button>
+      {/* Grid de Artículos */}
+      {loading ? (
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>Cargando base de conocimientos...</div>
+      ) : articulosFiltrados.length === 0 ? (
+        <div style={{ padding: 60, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, border: '1px dashed var(--border)', borderRadius: 4 }}>
+          No se encontraron artículos. Intenta crear uno nuevo.
         </div>
-        <form onSubmit={crearArticuloManual}>
-          <div className="modal-body">
-            <div className="form-row" style={{ gridTemplateColumns: '2fr 1fr' }}>
+      ) : (
+        <div className="articulos-grid">
+          {articulosFiltrados.map(art => (
+            <div key={art.id_articulo} className={`articulo-card ${art.estado_publicacion === 'Desactivado' ? 'disabled' : ''}`} onClick={() => setArticuloLectura(art)}>
               <div>
-                <label className="form-label">Título del Artículo</label>
-                <input type="text" required style={fieldBase} value={nuevoArticulo.titulo} onChange={(e) => setNuevoArticulo({ ...nuevoArticulo, titulo: e.target.value })} onFocus={onFocus} onBlur={onBlur} placeholder="Ej: Pasos para restablecer clave BUK" />
+                <span className="art-tag">{art.servicio_relacionado}</span>
+                {art.estado_publicacion === 'Desactivado' && (
+                  <span className="art-tag" style={{ marginLeft: 6, color: 'var(--danger)', borderColor: 'var(--danger)' }}>DESACTIVADO</span>
+                )}
               </div>
-              <div>
-                <label className="form-label">Categoría</label>
-                <select style={fieldBase} value={nuevoArticulo.categoria} onChange={(e) => setNuevoArticulo({ ...nuevoArticulo, categoria: e.target.value })} onFocus={onFocus} onBlur={onBlur}>
-                  <option value="Sistemas (SAP/Educandus)">Sistemas (SAP/Educandus)</option>
-                  <option value="Soporte Técnico General">Soporte Técnico General</option>
-                  <option value="Guías Académicas">Guías Académicas</option>
-                  <option value="Procedimientos de Red">Procedimientos de Red</option>
-                </select>
+              <h3 className="art-title">{art.titulo_articulo}</h3>
+              <p className="art-excerpt">{art.conten_articulo}</p>
+              
+              <div className="art-footer">
+                <div>
+                  <div style={{ fontSize: 10, color: 'var(--text-secondary)', fontWeight: 500 }}>{art.autor_articulo?.split('@')[0]}</div>
+                  <div style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>{art.fecha_articulo}</div>
+                </div>
+                <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 500 }}>Leer más →</span>
               </div>
             </div>
+          ))}
+        </div>
+      )}
+
+      {/* Modal de Lectura de Artículo */}
+      <Modal open={!!articuloLectura} onClose={() => setArticuloLectura(null)} maxWidth={700}>
+        {articuloLectura && (
+          <>
+            <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <span className="art-tag">{articuloLectura.servicio_relacionado}</span>
+                <h2 style={{ fontSize: 22, fontWeight: 600, color: 'var(--text-primary)', margin: '8px 0', lineHeight: 1.2 }}>{articuloLectura.titulo_articulo}</h2>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>
+                  Publicado por {articuloLectura.autor_articulo} el {articuloLectura.fecha_articulo}
+                </div>
+              </div>
+              <button onClick={() => setArticuloLectura(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 24, color: 'var(--text-muted)' }}>×</button>
+            </div>
+            
+            <div style={{ padding: '32px', overflowY: 'auto', flex: 1, fontSize: 14, lineHeight: 1.6, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>
+              {articuloLectura.conten_articulo}
+            </div>
+
+            <div style={{ padding: '16px 32px', borderTop: '1px solid var(--border)', background: 'var(--surface-2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button 
+                className="btn-ghost" 
+                style={{ color: articuloLectura.estado_publicacion === 'Publicado' ? 'var(--danger)' : 'var(--success)', borderColor: 'transparent' }}
+                onClick={() => cambiarEstadoPublicacion(articuloLectura.id_articulo, articuloLectura.estado_publicacion)}
+              >
+                {articuloLectura.estado_publicacion === 'Publicado' ? 'Desactivar Artículo' : 'Volver a Publicar'}
+              </button>
+              <button className="btn-primary" onClick={() => setArticuloLectura(null)}>Cerrar</button>
+            </div>
+          </>
+        )}
+      </Modal>
+
+      {/* Modal Nuevo Artículo */}
+      <Modal open={mostrarFormulario} onClose={() => !submitting && setMostrarFormulario(false)} maxWidth={600}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
+          <h3 style={{ fontSize: 15, fontWeight: 600 }}>Redactar Nuevo Artículo</h3>
+          <button onClick={() => setMostrarFormulario(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16 }}>×</button>
+        </div>
+        <form onSubmit={crearArticulo}>
+          <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            
             <div>
-              <label className="form-label">Contenido (Procedimiento)</label>
-              <textarea required rows={8} style={{ ...fieldBase, resize: 'vertical', fontFamily: 'var(--mono)', fontSize: 12 }} value={nuevoArticulo.contenido} onChange={(e) => setNuevoArticulo({ ...nuevoArticulo, contenido: e.target.value })} onFocus={onFocus} onBlur={onBlur} placeholder="1. Ingrese al portal intranet..." />
+              <label className="form-label">Servicio Relacionado</label>
+              <select required style={fieldBase} value={nuevoArticulo.servicio_relacionado} onChange={e => setNuevoArticulo({...nuevoArticulo, servicio_relacionado: e.target.value})}>
+                {CATALOGO_SERVICIOS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              </select>
             </div>
+
+            <div>
+              <label className="form-label">Título del Problema / Guía</label>
+              <input type="text" required style={fieldBase} value={nuevoArticulo.titulo_articulo} onChange={e => setNuevoArticulo({...nuevoArticulo, titulo_articulo: e.target.value})} placeholder="Ej: Cómo restablecer la contraseña de Educandus" />
+            </div>
+
+            <div>
+              <label className="form-label">Contenido de la Solución</label>
+              <textarea required rows={8} style={{...fieldBase, resize: 'vertical', lineHeight: 1.5}} value={nuevoArticulo.conten_articulo} onChange={e => setNuevoArticulo({...nuevoArticulo, conten_articulo: e.target.value})} placeholder="Paso 1: ...&#10;Paso 2: ...&#10;(Puedes incluir links a recursos externos aquí)" />
+            </div>
+
           </div>
-          <div className="modal-footer">
-            <button type="button" className="btn-ghost" onClick={() => setMostrarFormulario(false)} disabled={submitting}>Cancelar</button>
-            <button type="submit" className="btn-submit" disabled={submitting}>{submitting ? <><Spinner /> Publicando...</> : 'Publicar Artículo'}</button>
+          <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border)', background: 'var(--surface-2)', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <button type="button" className="btn-ghost" onClick={() => setMostrarFormulario(false)}>Cancelar</button>
+            <button type="submit" className="btn-primary" disabled={submitting}>{submitting ? 'Publicando...' : 'Publicar Artículo'}</button>
           </div>
         </form>
       </Modal>
+
       <Toast toasts={toasts} removeToast={removeToast} />
     </div>
   );

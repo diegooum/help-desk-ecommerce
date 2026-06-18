@@ -148,7 +148,7 @@ function Login({ onLoginSuccess }) {
           --mc-text-primary: #0A0A0A;
           --mc-text-muted:   #999999;
           --mc-text-dim:     #CCCCCC;
-          --mc-accent:       #0A0A0A;
+          --mc-accent:       #E53935;
           --mc-accent-hover: #333333;
           --mc-error:        #DC2626;
           --mc-error-bg:     #FEF2F2;
@@ -531,12 +531,60 @@ function Login({ onLoginSuccess }) {
             transition-duration: 0.01ms !important;
           }
         }
+
+        /* ── VIDEO DE FONDO (panel izquierdo) ── */
+.mc-left {
+  position: relative;
+  overflow: hidden;
+}
+
+.mc-left-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: cover;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+.mc-left-overlay {
+  position: absolute;
+  inset: 0;
+  background: #0A0A0A;
+  opacity: 0.25;
+  z-index: 1;
+}
+
+.mc-left-top,
+.mc-left-center,
+.mc-left-bottom {
+  position: relative;
+  z-index: 2;
+}
       `}</style>
 
       <div className="mc-root">
 
         {/* ── LEFT: Editorial Statement ── */}
         <div className="mc-left" aria-hidden="true">
+
+          {/* Video de fondo */}
+          <video
+            className="mc-left-video"
+            autoPlay
+            muted
+            loop
+            playsInline
+          >
+            <source src="/video-utalca.mp4" type="video/mp4" />
+          </video>
+          <div className="mc-left-overlay" />
+
           <div className="mc-left-top" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
             <img
               src="/corporativo_web1.png"
@@ -544,7 +592,7 @@ function Login({ onLoginSuccess }) {
               style={{ maxWidth: '350px', width: '100%', height: 'auto', display: 'block' }}
             />
           </div>
-    
+
 
           <div className="mc-left-center">
             <h1 className="mc-left-headline">

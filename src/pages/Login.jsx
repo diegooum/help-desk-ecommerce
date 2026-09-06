@@ -1,19 +1,12 @@
-/**
- * Login.jsx — Service Desk · Redesign Editorial
- * Aesthetic: Ultra-minimalist, split-screen typographic layout
- */
-
 import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
 
-/* ─────────────────────────────────────────────
-   Error types — each has its own UX copy
-───────────────────────────────────────────── */
+
 const ERROR_TYPES = {
   INVALID_CREDENTIALS: {
-    code: 'AUTH_401',
-    title: 'Credenciales incorrectas',
-    detail: 'El ID de operador o el código de acceso no son válidos.',
+    code: '',
+    title: 'Correo o contraseña invalidos',
+    detail: '',
     icon: (
       <svg viewBox="0 0 16 16" fill="none" className="mc-err-icon">
         <path d="M8 2L14 13H2L8 2Z" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" />
@@ -23,9 +16,9 @@ const ERROR_TYPES = {
     ),
   },
   NETWORK_ERROR: {
-    code: 'NET_503',
+    code: '',
     title: 'Sin conexión al servidor',
-    detail: 'No se pudo alcanzar el servicio de autenticación. Verifique su red.',
+    detail: '',
     icon: (
       <svg viewBox="0 0 16 16" fill="none" className="mc-err-icon">
         <path d="M2 4L14 12M14 4L2 12" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" />
@@ -33,9 +26,9 @@ const ERROR_TYPES = {
     ),
   },
   ACCOUNT_LOCKED: {
-    code: 'AUTH_423',
+    code: '',
     title: 'Cuenta bloqueada',
-    detail: 'Demasiados intentos fallidos. Contacte a soporte para desbloquear.',
+    detail: '',
     icon: (
       <svg viewBox="0 0 16 16" fill="none" className="mc-err-icon">
         <rect x="3" y="7" width="10" height="7" rx="1" stroke="currentColor" strokeWidth="1.25" />
@@ -46,9 +39,7 @@ const ERROR_TYPES = {
   },
 };
 
-/* ─────────────────────────────────────────────
-   Classify Supabase/network errors
-───────────────────────────────────────────── */
+
 function classifyError(error) {
   if (!error) return null;
   const msg = (error.message || '').toLowerCase();
@@ -57,9 +48,7 @@ function classifyError(error) {
   return ERROR_TYPES.INVALID_CREDENTIALS;
 }
 
-/* ─────────────────────────────────────────────
-   FloatingInput
-───────────────────────────────────────────── */
+
 function FloatingInput({ id, label, type = 'text', value, onChange, autoComplete, required }) {
   const [focused, setFocused] = useState(false);
   const lifted = focused || value.length > 0;
@@ -113,13 +102,13 @@ function Login({ onLoginSuccess }) {
   const [errorType, setErrorType] = useState(null);
   const [success, setSuccess] = useState(false);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  // Lógica extraída para poder ser reutilizada por los botones Demo
+  const performLogin = async (loginEmail, loginPassword) => {
     setLoading(true);
     setErrorType(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
       if (error) throw error;
       if (data.session) {
         setSuccess(true);
@@ -130,6 +119,29 @@ function Login({ onLoginSuccess }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    performLogin(email, password);
+  };
+
+  // Botón Demo para Agente TI
+  const handleDemoAgent = () => {
+    const demoEmail = 'soporte.ti@utalca.cl';
+    const demoPass = '123456'; // <-- ¡CÁMBIALO POR LA CONTRASEÑA REAL EN SUPABASE!
+    setEmail(demoEmail);
+    setPassword(demoPass);
+    performLogin(demoEmail, demoPass);
+  };
+
+  // Botón Demo para Usuario Final
+  const handleDemoUser = () => {
+    const demoEmail = 'alumno1@utalca.cl';
+    const demoPass = '123456'; // <-- ¡CÁMBIALO POR LA CONTRASEÑA REAL EN SUPABASE!
+    setEmail(demoEmail);
+    setPassword(demoPass);
+    performLogin(demoEmail, demoPass);
   };
 
   return (
@@ -476,6 +488,68 @@ function Login({ onLoginSuccess }) {
 
         @keyframes mc-spin { to { transform: rotate(360deg); } }
 
+        /* ── BOTONES DEMO PORTAFOLIO ── */
+        .mc-demo-container {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-top: 4px;
+        }
+
+        .mc-demo-divider {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin: 4px 0;
+        }
+
+        .mc-demo-divider::before,
+        .mc-demo-divider::after {
+          content: '';
+          flex: 1;
+          height: 1px;
+          background: var(--mc-border);
+        }
+
+        .mc-demo-divider span {
+          font-family: var(--mc-mono);
+          font-size: 9px;
+          color: var(--mc-text-muted);
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+        }
+
+        .mc-btn-demo-group {
+          display: flex;
+          gap: 12px;
+        }
+
+        .mc-btn-demo {
+          flex: 1;
+          background: transparent;
+          border: 1px solid var(--mc-border);
+          color: var(--mc-text-primary);
+          padding: 10px 14px;
+          border-radius: 4px;
+          font-family: var(--mc-mono);
+          font-size: 9.5px;
+          font-weight: 500;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          cursor: pointer;
+          transition: all var(--mc-transition);
+        }
+
+        .mc-btn-demo:hover:not(:disabled) {
+          border-color: var(--mc-text-primary);
+          background: var(--mc-panel-bg);
+        }
+
+        .mc-btn-demo:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
         /* ── FOOTER ── */
         .mc-footer {
           margin-top: 32px;
@@ -533,39 +607,39 @@ function Login({ onLoginSuccess }) {
         }
 
         /* ── VIDEO DE FONDO (panel izquierdo) ── */
-.mc-left {
-  position: relative;
-  overflow: hidden;
-}
+        .mc-left {
+          position: relative;
+          overflow: hidden;
+        }
 
-.mc-left-video {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  min-width: 100%;
-  min-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: cover;
-  z-index: 0;
-  opacity: 0.6;
-}
+        .mc-left-video {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          min-width: 100%;
+          min-height: 100%;
+          width: auto;
+          height: auto;
+          object-fit: cover;
+          z-index: 0;
+          opacity: 0.6;
+        }
 
-.mc-left-overlay {
-  position: absolute;
-  inset: 0;
-  background: #0A0A0A;
-  opacity: 0.25;
-  z-index: 1;
-}
+        .mc-left-overlay {
+          position: absolute;
+          inset: 0;
+          background: #0A0A0A;
+          opacity: 0.25;
+          z-index: 1;
+        }
 
-.mc-left-top,
-.mc-left-center,
-.mc-left-bottom {
-  position: relative;
-  z-index: 2;
-}
+        .mc-left-top,
+        .mc-left-center,
+        .mc-left-bottom {
+          position: relative;
+          z-index: 2;
+        }
       `}</style>
 
       <div className="mc-root">
@@ -593,30 +667,28 @@ function Login({ onLoginSuccess }) {
             />
           </div>
 
-
           <div className="mc-left-center">
             <h1 className="mc-left-headline">
               Mesa de Servicios<br />
               <em>Utalca</em>
             </h1>
             <p className="mc-left-desc">
-              Plataforma centralizada para la gestión de incidentes, requerimientos y activos tecnológicos institucionales.
+              Plataforma para gestionar incidentes, requerimientos y activos de la Universidad de Talca.
             </p>
           </div>
 
           <div className="mc-left-bottom">
             <div className="mc-left-divider" />
-            <span className="mc-left-footer-label">Acceso restringido · Solo personal autorizado</span>
-            <span className="mc-left-footer-label">TLS 1.3 · Sesión cifrada</span>
+            <span className="mc-left-footer-label"></span>
+            <span className="mc-left-footer-label"></span>
           </div>
         </div>
 
         {/* ── RIGHT: Form Panel ── */}
         <main className="mc-right" role="main">
           <header className="mc-header">
-            <p className="mc-eyebrow">Autenticación de acceso</p>
             <h2 className="mc-title">Iniciar sesión</h2>
-            <p className="mc-subtitle">Ingrese sus credenciales institucionales</p>
+            <p className="mc-subtitle">Ingrese su correo y contraseña institucional</p>
           </header>
 
           <form
@@ -657,17 +729,35 @@ function Login({ onLoginSuccess }) {
               {loading && <span className="mc-spinner" aria-hidden="true" />}
               {success ? '✓ SESIÓN INICIADA' : loading ? 'VERIFICANDO...' : 'INICIAR SESIÓN'}
             </button>
+
+            {/* ── SECCIÓN DEMO PORTAFOLIO ── */}
+            <div className="mc-demo-container">
+              <div className="mc-demo-divider">
+                <span>Acceso Rápido (DEMO)</span>
+              </div>
+              <div className="mc-btn-demo-group">
+                <button 
+                  type="button" 
+                  className="mc-btn-demo" 
+                  onClick={handleDemoAgent} 
+                  disabled={loading || success}
+                >
+                  Agente TI
+                </button>
+                <button 
+                  type="button" 
+                  className="mc-btn-demo" 
+                  onClick={handleDemoUser} 
+                  disabled={loading || success}
+                >
+                  Usuario Final
+                </button>
+              </div>
+            </div>
+
           </form>
 
-          <footer className="mc-footer">
-            <p className="mc-footer-text">
-              Acceso restringido.<br />
-              Personal Administrativo y Académico.
-            </p>
-            <a href="mailto:soporte@utalca.cl" className="mc-footer-link">
-              Contactar soporte →
-            </a>
-          </footer>
+
         </main>
       </div>
     </>
